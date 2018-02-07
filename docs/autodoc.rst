@@ -1,10 +1,5 @@
 Auto Docs
 =========
-.. automodule:: pyiiif.constants
-   :members:
-   :inherited-members:
-   :special-members: __init__
-
 .. automodule:: pyiiif
    :members:
    :inherited-members:

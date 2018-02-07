@@ -35,6 +35,8 @@ def update_record(rec, request_timeout=1/10):
     :param dict/str rec: The record, or a record URI to resolve
     :param int request_timeout: How long to wait for a response for the server
         before raising a :class:`requests.exceptions.Timeout`
+    :rtype: dict
+    :returns: The record, updated from the URL in its @id
     """
     if isinstance(rec, str):
         rec = get_record(rec, request_timeout=request_timeout)
