@@ -143,7 +143,8 @@ def get_thumbnail(rec, width=200, height=200, preserve_ratio=True,
     # If we pass an identifier just try and
     # get the record from the identifier.
     if isinstance(rec, str):
-        rec = get_record(rec, request_timeout=request_timeout, update=True)
+        rec = get_record(rec, request_timeout=request_timeout)
+    rec = update_record(rec)
     # If one is hardcoded
     hctn = get_hardcoded_thumbnail(
         rec, width=width, height=height,

@@ -5,6 +5,11 @@ Auto Docs
    :inherited-members:
    :special-members: __init__
 
+.. automodule:: pyiiif.records
+   :members:
+   :inherited-members:
+   :special-members: __init__
+
 .. automodule:: pyiiif.utils
    :members:
    :inherited-members:

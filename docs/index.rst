@@ -10,6 +10,7 @@ Welcome to pyiiif's documentation!
    :maxdepth: 2
    :caption: Contents:
 
+   intro
    autodoc
 
 

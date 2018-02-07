@@ -6,7 +6,6 @@ __author__ = "Brian Balsamo"
 __email__ = "brian@brianbalsamo.com"
 __version__ = "0.0.1"
 
-import re
 import urllib.parse
 
 from .utils import parse_image_api_url_scheme_url_component, \
@@ -15,11 +14,10 @@ from .utils import parse_image_api_url_scheme_url_component, \
     parse_image_api_url_identifier_url_component, \
     parse_image_api_url_region_url_component, \
     parse_image_api_url_size_url_component, \
+    parse_image_api_url_rotation_url_component, \
     parse_image_api_url_quality_url_component, \
     parse_image_api_url_format_url_component
-from .constants import valid_image_formats, valid_schemes
 from .exceptions import ParameterError
-
 
 
 # {scheme}://{server}{/prefix}/{identifier}/{region}/{size}/{rotation}/{quality}.{format}
@@ -31,6 +29,12 @@ class ImageApiUrl:
     """
     @classmethod
     def from_image_url(cls, url):
+        """
+        Instantiate an instance from an image URL
+
+        :param str url: The URL to parse
+        :rtype: :class:`ImageApiUrl`
+        """
         url = urllib.parse.urlunparse(
             urllib.parse.urlparse(url)[0:3] + ("",)*3
         )
@@ -49,6 +53,12 @@ class ImageApiUrl:
 
     @classmethod
     def from_info_url(cls, url):
+        """
+        Instantiate an instance from an info URL
+
+        :param str url: The URL to parse
+        :rtype: :class:`ImageApiUrl`
+        """
         url = urllib.parse.urlunparse(
             urllib.parse.urlparse(url)[0:3] + ("",)*3
         )
@@ -62,6 +72,13 @@ class ImageApiUrl:
 
     @classmethod
     def from_url(cls, url):
+        """
+        wraps :func:`ImageApiUrl.from_image_url` and :func:`ImageApiUrl.from_info_url`
+        and tries to apply the correct one to any URL supplied.
+
+        :param str url: The URL to parse
+        :rtype: :class:`ImageApiUrl`
+        """
         url = urllib.parse.urlunparse(
             urllib.parse.urlparse(url)[0:3] + ("",)*3
         )
@@ -70,11 +87,26 @@ class ImageApiUrl:
         else:
             return cls.from_image_url(url)
 
-    def __init__(
-        self, scheme, server, prefix, identifier,
-        region="full", size="full", rotation="0",
-        quality="default", format="jpg", validate=True
-    ):
+    def __init__(self, scheme, server, prefix, identifier,
+                 region="full", size="full", rotation="0",
+                 quality="default", format="jpg", validate=True):
+        """
+        Instantiate a new instance.
+
+        See `The IIIF Image API Specification <http://iiif.io/api/image/2.1/#uri-syntax>`_
+        for explanations of each URI segment.
+
+        :param str scheme: The scheme
+        :param str server: The server
+        :param str prefix: The prefix
+        :param str identifier: The identifier
+        :param str region: The region
+        :param str size: The size
+        :param str rotation: The rotation
+        :param str quality: The qualty
+        :param str format: The format
+        :param bool validate: Whether or not to validate the record on creation.
+        """
         self._scheme = scheme
         self._server = server
         self._prefix = prefix
@@ -88,6 +120,12 @@ class ImageApiUrl:
             self.validate()
 
     def to_image_url(self):
+        """
+        Return a representation of the image url represented
+        by the :class:`ImageApiUrl`
+
+        :rtype: str
+        """
         return self.scheme+"://" + self.server + self.prefix + "/" + \
             "/".join(
                 [
@@ -101,10 +139,23 @@ class ImageApiUrl:
             ".{}".format(self.format)
 
     def to_info_url(self):
+        """
+        Return a representation of the info url represented
+        by the :class:`ImageApiUrl`
+
+        :rtype: str
+        """
         return self.scheme+"://" + self.server + self.prefix + "/" + \
             self.identifier + "/info.json"
 
     def validate(self):
+        """
+        Validates the URL.
+
+        Valid URLs will return None, invalid URLs will raise an exception
+
+        :rtype: None
+        """
         self.from_url(self.to_image_url())
 
     def set_scheme(self, x):
