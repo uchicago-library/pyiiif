@@ -9,6 +9,14 @@ __version__ = "0.0.1"
 import re
 import urllib.parse
 
+from .utils import parse_image_api_url_scheme_url_componenet, \
+    parse_image_api_url_url_server_url_componenet, \
+    parse_image_api_url_prefix_url_componenet, \
+    parse_image_api_url_identifier_url_componenet, \
+    parse_image_api_url_region_url_component, \
+    parse_image_api_url_size_url_componenet, \
+    parse_image_api_url_quality_url_componenet, \
+    parse_image_api_url_format_url_compoenent
 from .constants import valid_image_formats, valid_schemes
 from .exceptions import ParameterError
 
@@ -22,170 +30,20 @@ class ImageApiUrl:
     A class for parsing, creating, and manipulating IIIF Image API URLs
     """
     @classmethod
-    def parse_scheme_url_component(cls, url):
-        scheme = urllib.parse.urlparse(url).scheme
-        if scheme not in valid_schemes:
-            raise ParameterError(
-                "Valid schemes include: {}".format(", ".join(valid_schemes))
-            )
-        return scheme
-
-    @classmethod
-    def parse_server_url_component(cls, url):
-        return urllib.parse.urlparse(url).netloc
-
-    @classmethod
-    def parse_prefix_url_component(cls, url):
-        if url.endswith("info.json"):
-            p = urllib.parse.urlparse(url).path
-            if len(p.split("/")) > 3:
-                return "/".join(p.split("/")[0:-2])
-            return ""
-        else:
-            p = urllib.parse.urlparse(url).path
-            if len(p.split("/")) > 6:
-                return "/".join(p.split("/")[0:-5])
-            return ""
-
-    @classmethod
-    def parse_identifier_url_component(cls, url):
-        if url.endswith("info.json"):
-            p = urllib.parse.urlparse(url).path
-            s = p.split("/")[-2]
-            return s
-        else:
-            p = urllib.parse.urlparse(url).path
-            s = p.split("/")[-5]
-            return s
-
-    @classmethod
-    def parse_region_url_component(cls, url):
-        # .../full/full/0/default.jpg
-        # .../square/full/0/default.jpg
-        p = urllib.parse.urlparse(url).path
-        s = p.split("/")[-4]
-        if s in ("full", "square"):
-            return s
-        # .../125,15,120,140/full/0/default.jpg
-        elif re.match("[0-9]+,[0-9]+,[0-9]+,[0-9]+$", s):
-            for x in s.split(","):
-                try:
-                    int(x)
-                except ValueError:
-                    raise ParameterError("Incorrect region paramter")
-            return s
-        # region=pct:41.6,7.5,40,70
-        elif s.startswith("pct:"):
-            for x in s[4:].split(","):
-                try:
-                    float(x)
-                except ValueError:
-                    raise ParameterError("Incorrect region paramter")
-            return s
-        # Error case
-        else:
-            raise ParameterError("Incorrect region parameter")
-
-    @classmethod
-    def parse_size_url_component(cls, url):
-        p = urllib.parse.urlparse(url).path
-        s = p.split("/")[-3]
-        # /full/full/0/default.jpg
-        # /full/max/0/default.jpg
-        if s in ("full", "max"):
-            # Deprecation Warning in the spec about "full"
-            return s
-        # .../full/150,/0/default.jpg
-        elif s.endswith(","):
-            try:
-                int(s[:-1])
-            except ValueError:
-                raise ParameterError("Incorrect size parameter")
-            return s
-        # .../full/,150/0/default.jpg
-        elif s.startswith(","):
-            try:
-                int(s[1:])
-            except ValueError:
-                raise ParameterError("Incorrect size parameter")
-            return s
-        # .../full/pct:50/0/default.jpg
-        elif s.startswith("pct:"):
-            try:
-                float(s[4:])
-            except ValueError:
-                raise ParameterError("Incorrect size parameter")
-            return s
-        # .../full/225,100/0/default.jpg
-        # .../full/!225,100/0/default.jpg
-        elif re.match("^(\!)?[0-9]+,[0-9]+$", s):
-            if s.startswith("!"):
-                c = s[1:]
-            else:
-                c = s
-            for x in c.split(","):
-                try:
-                    int(x)
-                except ValueError:
-                    raise ParameterError("Incorrect size parameter")
-            return s
-        # Error case
-        else:
-            raise ParameterError("Incorrect size parameter")
-
-    @classmethod
-    def parse_rotation_url_component(cls, url):
-        # .../full/full/0/default.jpg
-        # .../full/full/!0/default.jpg
-        p = urllib.parse.urlparse(url).path
-        s = p.split("/")[-2]
-        if s.startswith("!"):
-            if len(s) < 2:
-                raise ParameterError("Incorrect rotation paramter")
-            c = s[1:]
-        else:
-            c = s
-        try:
-            assert(0 <= float(c) <= 360)
-            return s
-        # Error case
-        except (ValueError, AssertionError):
-            raise ParameterError("Incorrect rotation parameter")
-
-    @classmethod
-    def parse_quality_url_component(cls, url):
-        p = urllib.parse.urlparse(url).path
-        subp = p.split("/")[-1]
-        qual = subp.split(".")[0]
-        if qual in ("color", "gray", "bitonal", "default"):
-            return qual
-        else:
-            raise ParameterError("Incorrect quality parameter")
-
-    @classmethod
-    def parse_format_url_component(cls, url):
-        p = urllib.parse.urlparse(url).path
-        fmt = p.split(".")[-1]
-        if fmt in valid_image_formats:
-            return fmt
-        else:
-            raise ParameterError("Incorrect format paramter")
-
-    @classmethod
     def from_image_url(cls, url):
         url = urllib.parse.urlunparse(
             urllib.parse.urlparse(url)[0:3] + ("",)*3
         )
         return cls(
-            cls.parse_scheme_url_component(url),
-            cls.parse_server_url_component(url),
-            cls.parse_prefix_url_component(url),
-            cls.parse_identifier_url_component(url),
-            cls.parse_region_url_component(url),
-            cls.parse_size_url_component(url),
-            cls.parse_rotation_url_component(url),
-            cls.parse_quality_url_component(url),
-            cls.parse_format_url_component(url),
+            parse_image_api_url_scheme_url_component(url),
+            parse_image_api_url_server_url_component(url),
+            parse_image_api_url_prefix_url_component(url),
+            parse_image_api_url_identifier_url_component(url),
+            parse_image_api_url_region_url_component(url),
+            parse_image_api_url_size_url_component(url),
+            parse_image_api_url_rotation_url_component(url),
+            parse_image_api_url_quality_url_component(url),
+            parse_image_api_url_format_url_component(url),
             validate=False
         )
 
@@ -195,10 +53,10 @@ class ImageApiUrl:
             urllib.parse.urlparse(url)[0:3] + ("",)*3
         )
         return cls(
-            cls.parse_scheme_url_component(url),
-            cls.parse_server_url_component(url),
-            cls.parse_prefix_url_component(url),
-            cls.parse_identifier_url_component(url),
+            parse_image_api_url_scheme_url_component(url),
+            parse_image_api_url_server_url_component(url),
+            parse_image_api_url_prefix_url_component(url),
+            parse_image_api_url_identifier_url_component(url),
             validate=False
         )
 
