@@ -9,14 +9,14 @@ __version__ = "0.0.1"
 import re
 import urllib.parse
 
-from .utils import parse_image_api_url_scheme_url_componenet, \
-    parse_image_api_url_url_server_url_componenet, \
-    parse_image_api_url_prefix_url_componenet, \
-    parse_image_api_url_identifier_url_componenet, \
+from .utils import parse_image_api_url_scheme_url_component, \
+    parse_image_api_url_server_url_component, \
+    parse_image_api_url_prefix_url_component, \
+    parse_image_api_url_identifier_url_component, \
     parse_image_api_url_region_url_component, \
-    parse_image_api_url_size_url_componenet, \
-    parse_image_api_url_quality_url_componenet, \
-    parse_image_api_url_format_url_compoenent
+    parse_image_api_url_size_url_component, \
+    parse_image_api_url_quality_url_component, \
+    parse_image_api_url_format_url_component
 from .constants import valid_image_formats, valid_schemes
 from .exceptions import ParameterError
 
