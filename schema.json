@@ -1,0 +1,201 @@
+{
+    "id": "iiifpres_records",
+    "title": "IIIF Presentation API 2.1.1 Record Schema",
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "description": "Schema for validating IIIF Presentation API 2.1.1 records",
+    "allOf": [
+        {
+            "type": "object",
+            "properties": {
+                "@context": {
+                    "type": "string",
+                    "pattern": "^http://iiif.io/api/presentation/2/context.json$"
+                }
+            }
+        },
+        {
+            "oneOf": [
+                {"$ref": "#/definitions/collection"},
+                {"$ref": "#/definitions/manifest"},
+                {"$ref": "#/definitions/range"},
+                {"$ref": "#/definitions/layer"},
+                {"$ref": "#/definitions/annotation_list"},
+                {"$ref": "#/definitions/sequence"},
+                {"$ref": "#/definitions/canvas"},
+                {"$ref": "#/definitions/annotation"},
+                {"$ref": "#/definitions/content"}
+            ]
+        }
+    ],
+    "definitions": {
+        "anything_goes": {
+        },
+        "any_string": {
+            "type": "string",
+            "pattern": "^.*$"
+        },
+        "positive_int": {
+            "type": "integer",
+            "minimum": 0
+        },
+        "not_empty_string": {
+            "type": "string",
+            "pattern": "^.+$"
+        },
+        "not_empty_string_array": {
+            "type": "array",
+            "items": {"$ref": "#/definitions/not_empty_string"}
+        },
+        "resource": {
+            "type": "object",
+            "required": ["@id"],
+            "properties": {
+                "@id": {"$ref": "#/definitions/not_empty_string"}
+            },
+            "additionalProperties": true
+        },
+        "navDate": {
+            "description": "#TODO"
+        },
+        "thumbnail": {
+            "description": "#TODO"
+        },
+        "metadata": {
+            "description": "#TODO"
+        },
+        "collection": {
+	    "type": "object",
+	    "additionalProperties": false,
+	    "required": ["@id", "@type", "label"],
+	    "properties": {
+                "@context": {},
+		"@type": {
+		    "type": "string", 
+		    "pattern": "sc:Collection"
+		},
+		"collections": {
+		    "type": "array",
+		    "items": {"$ref": "#/definitions/collection"}
+		},
+		"manifests": {
+		    "type": "array",
+		    "items": {"$ref": "#/definitions/manifest"}
+		},
+		"members": {
+		    "type": "array",
+		    "items": {
+                        "oneOf": [
+                            {"$ref": "#/definitions/manifest"},
+                            {"$ref": "#/definitions/collection"}
+                        ]
+                    }
+		},
+		"@id": {"$ref": "#/definitions/not_empty_string"},
+		"viewingHint": {
+                    "oneOf": [
+                        {
+                            "type": "string",
+                            "pattern": "^multi-part$|^individuals$|^top$"
+                        },
+                        {
+                            "type": "array",
+                            "items": {
+                                "type": "string",
+                                "pattern": "^multi-part$|^individuals$|^top$"
+                            }
+                        }
+                    ]
+		},
+		"navDate": {"$ref": "#/navDate"},
+		"label": {
+		    "$anyOf": [
+			{"$ref": "#/definitions/not_empty_string"},
+			{"$ref": "#/definitions/not_emptry_string_array"}
+		    ]
+		},
+		"description": {"$ref": "#/definitions/any_string"},
+		"attribution": {"$ref": "#/definitions/any_string"},
+		"metadata": {
+		    "description": "#TODO"
+		},
+		"thumbnail": {"$ref": "#/definitions/thumbnail"},
+		"license": {"$ref": "#/definitions/any_string"},
+		"logo": {
+		    "description": "#TODO"
+                }
+            }
+        },
+        "manifest": {
+            "description": "#TODO",
+            "properties": {
+                "@type": {
+                    "type": "string",
+                    "pattern": "^sc:Manifest$"
+                }
+            }
+        },
+        "range": {
+            "description": "#TODO",
+            "properties": {
+                "@type": {
+                    "type": "string",
+                    "pattern": "^sc:Range$"
+                }
+            }
+        },
+        "layer": {
+            "description": "#TODO",
+            "properties": {
+                "@type": {
+                    "type": "string",
+                    "pattern": "^sc:Layer$"
+                }
+            }
+        },
+        "annotation_list": {
+            "description": "#TODO",
+            "properties": {
+                "@type": {
+                    "type": "string",
+                    "pattern": "^sc:AnnotationList$"
+                }
+            }
+        },
+        "sequence": {
+            "description": "#TODO",
+            "properties": {
+                "@type": {
+                    "type": "string",
+                    "pattern": "^sc:Sequence$"
+                }
+            }
+        },
+        "canvas": {
+            "description": "#TODO",
+            "properties": {
+                "@type": {
+                    "type": "string",
+                    "pattern": "^sc:Canvas$"
+                }
+            }
+        },
+        "annotation": {
+            "description": "#TODO",
+            "properties": {
+                "@type": {
+                    "type": "string",
+                    "pattern": "^oa:Annotation$"
+                }
+            }
+        },
+        "content": {
+            "description": "#TODO",
+            "properties": {
+                "@type": {
+                    "type": "string",
+                    "pattern": "^dctypes:Image$"
+                }
+            }
+        }
+    }
+}
