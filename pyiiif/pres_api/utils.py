@@ -1,5 +1,6 @@
 import requests
 from functools import partial
+from threading import local
 
 from ..image_api.twodotone import ImageApiUrl
 
@@ -88,7 +89,8 @@ def get_hardcoded_thumbnail(rec, width=200, height=200, preserve_ratio=True,
 
 
 def get_thumbnail(rec, width=200, height=200, preserve_ratio=True,
-                  request_timeout=1/10, allow_non_iiif=False):
+                  request_timeout=1/10, allow_non_iiif=False,
+                  _traversed=local()):
     """
     Retrieve a thumbnail from any IIIF Presentation API Record
 
@@ -109,6 +111,10 @@ def get_thumbnail(rec, width=200, height=200, preserve_ratio=True,
         aren't IIIF URLs - this means that if a record hard codes a static
         image link as a thumbnail you'll get that back, even if it isn't below
         the requested width/height
+    :param threading.local _traversed: A local namespace (in case this function
+        is threaded) which stores the route the function has traversed, in order
+        to facilitate fast failing in the event of a cyclic record structure.
+        This function handles setting up and utilizing this variable internally.
     """
     if preserve_ratio:
         width = "!"+str(width)
@@ -121,6 +127,16 @@ def get_thumbnail(rec, width=200, height=200, preserve_ratio=True,
         rec = update_record(rec)
     except:
         pass
+
+    # Fail fast on cyclic records
+    if hasattr(_traversed, 'ids'):
+        if rec['@id'] in _traversed.ids:
+            print("encountered record twice: {}".format(rec['@id']))
+            return None
+    else:
+        _traversed.ids = []
+    _traversed.ids.append(rec['@id'])
+
     # If one is hardcoded
     hctn = get_hardcoded_thumbnail(
         rec, width=width, height=height,
@@ -136,7 +152,8 @@ def get_thumbnail(rec, width=200, height=200, preserve_ratio=True,
         get_thumbnail,
         width=width, height=height,
         preserve_ratio=False, request_timeout=request_timeout,
-        allow_non_iiif=allow_non_iiif
+        allow_non_iiif=allow_non_iiif,
+        _traversed=_traversed
     )
     # Recurse, depending on record type
     if rec['@type'] == "sc:Collection":
