@@ -1,4 +1,7 @@
 import requests
+from functools import partial
+
+from ..image_api.twodotone import ImageApiUrl
 
 
 def update_record(rec, request_timeout=1/10):
@@ -107,14 +110,17 @@ def get_thumbnail(rec, width=200, height=200, preserve_ratio=True,
         image link as a thumbnail you'll get that back, even if it isn't below
         the requested width/height
     """
-    from . import ImageApiUrl
     if preserve_ratio:
         width = "!"+str(width)
     # If we pass an identifier just try and
     # get the record from the identifier.
     if isinstance(rec, str):
         rec = get_record(rec, request_timeout=request_timeout)
-    rec = update_record(rec)
+    # Ignore if (TODO: certain?) records can't be dereferenced
+    try:
+        rec = update_record(rec)
+    except:
+        pass
     # If one is hardcoded
     hctn = get_hardcoded_thumbnail(
         rec, width=width, height=height,

@@ -1,8 +1,8 @@
 import urllib
 import re
 
-from ..exceptions import ParameterError
-from ..constants import valid_schemes, valid_image_formats
+from ...exceptions import ParameterError
+from ...constants import valid_schemes, valid_image_formats
 
 
 def parse_image_api_url_scheme_url_component(url):
