@@ -7,6 +7,13 @@ Library code for working with the IIIF specifications
 
 See the full documentation at https://pyiiif.readthedocs.io
 
+## Introduction
+
+pyiiif is a library for working with (at the moment) [IIIF Image APIs](http://iiif.io/api/image/2.1/) and [IIIF Presentation APIs](http://iiif.io/api/presentation/2.1/).
+
+The goal of this library is to provide common utility functions for working with the APIs and records defined in these standards, as well as providing an object oriented interface for the creation of IIIF records.
+
+For more information about IIIF technologies and specifications see [here](http://iiif.io/).
 
 # Author
 Brian Balsamo <brian@brianbalsamo.com>
