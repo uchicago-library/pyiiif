@@ -1,4 +1,4 @@
-import urllib.parse
+from urllib.request import quote, unquote
 
 
 def escape_identifier(identifier):
@@ -9,7 +9,7 @@ def escape_identifier(identifier):
     :rtype: str
     :returns: The identifier, escaped
     """
-    return urllib.parse.urlquote(identifier, safe='')
+    return quote(identifier, safe='')
 
 
 def unescape_identifier(identifier):
@@ -20,4 +20,4 @@ def unescape_identifier(identifier):
     :rtype: str
     :returns: The identifier, unescaped
     """
-    return urllib.parse.urlunquote(identifier)
+    return unquote(identifier)
