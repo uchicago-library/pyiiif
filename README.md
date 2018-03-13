@@ -4,22 +4,32 @@
 
 
 
-Library code for working with the IIIF specifications
 
 
-See the full documentation at https://pyiiif.readthedocs.io
 
 ## Introduction
 
-pyiiif is a library for working with (at the moment) [IIIF Image APIs](http://iiif.io/api/image/2.1/) and [IIIF Presentation APIs](http://iiif.io/api/presentation/2.1/).
+pyiiif is a library for working with  
 
-The goal of this library is to provide common utility functions for working with the APIs and records defined in these standards, as well as providing an object oriented interface for the creation of IIIF records.
+It provides a pythonic interface to generating IIIF Presentation API records. The purpose is to reduce the amount of typing required and reduce amount of errors in creating large numbers of IIIF records. 
 
-For more information about IIIF technologies and specifications see [here](http://iiif.io/).
+A person with a nominal amount of programming experience can create a IIIF record by simply typing the following:
+
+```python
+>>> from pyiiif.pres_api.twodotone.records import Manifest
+>>> r = Manifest(
+>>> r.id = "https://example.org/foo"
+>>> r.type = "sc:Manifest"
+>>> r.label = "Fun with IIIF"
+>>> r.description = "This is my first IIIF manifest. Please be polite with your criticism"
+>>> str(r)
+```
+
+And, you have a properly formatted IIIF Manifest record with the correct @context, @type and @id attributes as well as a a label and a description. The sequence list will be empty for now. From here, you just need to write the string into  a dicitonary
 
 ## Quickstart
 
-```
+```shell
 $ git clone git@github.com:uchicago-library/pyiiif
 $ cd pyiiif
 $ python -m venv venv
@@ -40,6 +50,10 @@ This will:
 1. install the library into your virtual environment in development so that you won't have to run install every time you make changes to your code that you want to test
 1. run the tests that are written for the project
 
+# Footnotes
+- [Complete documentation](https://uchicagolibrary-pyiiif.readthedocs.io)
+- [IIIF or International Interoperable Image Framework](http://iiif.io/)
+- [IIIF Presentation APIs](http://iiif.io/api/presentation/2.1/)
 
 # Authors
 verbalhanglider <tdanstrom@uchicago.edu>
