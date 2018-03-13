@@ -4,7 +4,7 @@
 
 ## Introduction
 
-pyiiif is a library for working with  
+pyiiif is a library for working with the IIIF Presentation API 
 
 It provides a pythonic interface to generating IIIF Presentation API records. The purpose is to reduce the amount of typing required and reduce amount of errors in creating large numbers of IIIF records. 
 
