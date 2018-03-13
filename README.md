@@ -2,11 +2,6 @@
 
 [![Build Status](https://travis-ci.org/uchicago-library/pyiiif.svg?branch=master)](https://travis-ci.org/uchicago-library/pyiiif) [![Coverage Status](https://coveralls.io/repos/github/uchicago-library/pyiiif/badge.svg?branch=master)](https://coveralls.io/github/uchicago-library/pyiiif?branch=master) [![Documentation Status](https://readthedocs.org/projects/uchicagolibrary-pyiiif/badge/?version=latest)](http://uchicagolibrary-pyiiif.readthedocs.io/en/latest/?badge=latest)
 
-
-
-
-
-
 ## Introduction
 
 pyiiif is a library for working with  
@@ -17,7 +12,7 @@ A person with a nominal amount of programming experience can create a IIIF recor
 
 ```python
 >>> from pyiiif.pres_api.twodotone.records import Manifest
->>> r = Manifest(
+>>> r = Manifest()
 >>> r.id = "https://example.org/foo"
 >>> r.type = "sc:Manifest"
 >>> r.label = "Fun with IIIF"
