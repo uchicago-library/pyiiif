@@ -15,8 +15,16 @@ class Record:
     in any client code. Instead classes thatinherit record like Collection, 
     Manifest and Sequence and Canvas should be called
     """
+    __name__ = "Record"
+
     def __init__(self, *args, **kwargs):
         pass 
+
+    def __repr__(self):
+        out = self.__name__
+        if getattr(self, 'id', None):
+            out += " for " + self.id
+        return out
 
     def __str__(self):
         out = {}
@@ -67,7 +75,11 @@ class Record:
             setattr(self, property_name, x)
         else:
             raise ValueError("parameter passed to {} must be a list".format(property_name))
-    
+
+    def _set_simple_property(self, x, property_name):
+        if isinstance(x, str):
+            setattr(self, property_name, x)
+
     def _set_numeric_property(self, x, property_name):
         if isinstance(x, int):
             setattr(self, property_name, x)
@@ -249,7 +261,6 @@ class Record:
         else:
             return (True, errors)
 
-
     type = property(get_type, set_type, del_type)
     id = property(get_id, set_id, del_id)
     context = property(get_context, set_context, del_context)
@@ -265,6 +276,8 @@ class Collection(Record):
     :rtype Collection
     :return an instance of a Colllection record
     """
+
+    __name__ = "Collection"
 
     def __init__(self, uri):
         """"initializes a Collection with type sc:Collection and id of uri given at init
@@ -299,7 +312,7 @@ class Collection(Record):
         return self._iterate_some_list('_members')
 
     def set_members(self, x):
-        self._set_a_list_property(x, '_manifests', [Manifest, Collection])
+        self._set_a_list_property(x, '_members', [Manifest, Collection])
 
     def del_members(self):
         if hasattr(self, "_members"):
@@ -313,6 +326,9 @@ class Collection(Record):
 
 
 class Manifest(Record):
+
+    __name__ = "Manifest"    
+
     def __init__(self, uri):
         self.context = "foo"
         self.type = "sc:Manifest"
@@ -342,6 +358,9 @@ class Manifest(Record):
 
 
 class Sequence(Record):
+
+    __name__ = "Sequence"
+
     def __init__(self, uri):
         self.id = uri
         self.type = "sc:Sequence"
@@ -372,6 +391,9 @@ class Sequence(Record):
 
 
 class Canvas(Record):
+
+    __name__ = "Canvas"
+
     def __init__(self, uri):
         self.id = uri
         self.type = "sc:Canvas"
@@ -420,10 +442,13 @@ class Canvas(Record):
 
     images = property(get_images, set_images, del_images)
     height = property(get_height, set_height, del_height)
-    width = property(get_height, set_height, del_height)
+    width = property(get_width, set_width, del_width)
     otherContent = property(get_otherContent, set_otherContent, del_otherContent)
 
 class AnnotationList(Record):
+
+    __name__ = "AnnotationList"
+
     def __init__(self, uri):
         self.id = uri
         self.type = "sc:AnnotationList"
@@ -440,27 +465,59 @@ class AnnotationList(Record):
     resources = property(get_resources, set_resources, del_resources)
 
 class Annotation(Record):
-    def __init__(self):
-        pass
 
+    __name__ = "Annotation"
 
-class ImageContent(Record):
-    def __init__(self):
-        pass
+    def __init__(self, uri):
+        self.id = uri
+        self.type = "oa:Annotation"
 
     def get_format(self):
-        pass
+        return self._get_simple_property("_format")
 
-    def set_format(self):
-        pass
+    def set_format(self, value):
+        self._set_simple_property(value, "_format")
 
     def del_format(self):
-        pass
+        self._delete_a_property("_format") 
+
+    def get_resource(self):
+        return self._get_simple_property("_format")
+
+    def set_resource(self, x):
+        if isinstance(x, ImageContent):
+            self._set_simple_property(x, "_resource")
+
+    def del_resource(self):
+        self._delete_a_property("_resource")
+
+    format = property(get_format, set_format, del_format)
+    resource = property(get_resource, set_resource, del_resource)
+
+class ImageContent(Record):
+
+    __name__ = "ImageContent"
+
+    def __init__(self, uri, mimetype):
+        self.id = uri
+        self.type = "dctypes:Image"
+        self.format = mimetype
+
+    def get_format(self):
+        return self._get_simple_property("_format")
+
+    def set_format(self, x):
+        self._set_simple_property(x, "_format")
+
+    def del_format(self):
+        self._delete_a_property("_format")
 
     format = property(get_format, set_format, del_format)
 
-
 class OtherContent(Record):
+
+    __name__ = "OtherContent"
+
     def __init__(self):
         pass
 
@@ -476,6 +533,9 @@ class OtherContent(Record):
     format = property(get_format, set_format, del_format)
 
 class Range(Record):
+
+    __name__ = "Range"
+
     def __init__(self, uri):
         self.id = uri
         self.type = "sc:Range"

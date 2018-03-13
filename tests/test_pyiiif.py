@@ -6,7 +6,7 @@ import pytest
 import unittest
 
 import pyiiif
-from pyiiif.pres_api.twodotone.records import Record, Collection, Manifest, Sequence, Canvas
+from pyiiif.pres_api.twodotone.records import Annotation, Record, Collection, Manifest, Sequence, Canvas, AnnotationList, Range
 
 
 class Tests(unittest.TestCase):
@@ -123,7 +123,7 @@ class Tests(unittest.TestCase):
         return self.assertEquals(x1.id, "https://lib.uchicago.edu/") and \
                self.assertEquals(x2.id, "https://www.lib.uchicago.edu/collex/?digital=on&view=collections")
 
-    def testMixOfRecords(self):
+    def testBuildMixOfRecords(self):
         collection = Collection("https://www.lib.uchicago.edu/collex/?digital=on&view=collections")
         manifest = Manifest("https://www2.lib.uchicago.edu/")
         sequence = Sequence("https://www.lib.uchicago.edu/about/directory/?view=staff&subject=All+Subject+Specialists")
@@ -134,14 +134,39 @@ class Tests(unittest.TestCase):
                self.assertEquals(sequence.type, "sc:Sequence") and \
                self.assertEquals(sequence.id, "https://www.lib.uchicago.edu/about/directory/?view=staff&subject=All+Subject+Specialists")
 
-    def testManifestWithASequence(self):
+    def testBuildManifestWithASequence(self):
         m = Manifest("https://lib.uchicago.edu/")
         s = Sequence("https://lib.uchicago.edu/")
         s.canvases = [Canvas("https://lib.uchicago.edu/")]
         m.sequences = [s]
+        return self.assertEquals(str(m.sequences), "[Sequence for https://lib.uchicago.edu/]") and \
+               self.assertEquals(m.id, 'https://lib.uchicago.edu/')
+    
+    def testBuildCollectionWithMembers(self):
+        c = Collection("https://lib.uchicago.edu/")
+        c.members = [Manifest("https://lib.uchicago.edu/")]
+        return self.assertEquals(str(c.members), "[Manifest for https://lib.uchicago.edu/]") and \
+               self.assertEquals(c.id, 'https://lib.uchicago.edu/')
 
-    # TODO write tests for manifest, collection, canvas, sequence, range, annotationlist creation positive and negative results
-    # TODO write tests for validation of all types of records
+    def testBuildCanvas(self):
+        c = Canvas("https://lib.uchicago.edu/")
+        c.height = 1000
+        c.width = 500
+        return self.assertEquals(c.height, 1000) and \
+               self.assertEquals(c.width, 500) and \
+               self.assertEquals(c.id, "https://lib.uchicago.edu/")
+
+    def testBuildSequence(self):
+        s = Sequence("https://lib.uchicago.edu/")
+        s.canvases = [Canvas("https://lib.uchicago.edu/")]
+        return self.assertEquals(str(s.canvases), "[Canvas for https://lib.uchicago.edu/]") and \
+               self.assertEquals(s.id, 'https://lib.uchicago.edu/')
+
+    def testBuildAnnotationList(self):
+        s = AnnotationList("https://lib.uchicago.edu/")
+        s.canvases = [Annotation("https://lib.uchicago.edu/")]
+        return self.assertEquals(str(s.canvases), "[Annotation for https://lib.uchicago.edu/]") and \
+               self.assertEquals(s.id, 'https://lib.uchicago.edu/') 
 
 if __name__ == "__main__":
     unittest.main()

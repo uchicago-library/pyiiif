@@ -20,7 +20,7 @@ A person with a nominal amount of programming experience can create a IIIF recor
 >>> str(r)
 ```
 
-And, you have a properly formatted IIIF Manifest record with the correct @context, @type and @id attributes as well as a a label and a description. The sequence list will be empty for now. From here, you just need to write the string into  a dicitonary
+And, you have a properly formatted IIIF Manifest record with the correct @context, @type and @id attributes as well as a a label and a description. The sequence list will be empty for now. From here, you just need to write the string into  a dictionary
 
 ## Quickstart
 

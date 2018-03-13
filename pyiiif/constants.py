@@ -38,10 +38,11 @@ valid_types = ["sc:Manifest",
                "sc:Canvas",
                "sc:Content",
                "sc:Collection",
-               "sc:Annotation",
+               "oa:Annotation",
                "sc:AnnotationList",
                "sc:Range",
-               "sc:Layer"
+               "sc:Layer",
+               "dctypes:Image"
               ]
 
 valid_contexts = ["https://iiif.io/api/presentations/2/context.json"]
