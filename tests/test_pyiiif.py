@@ -6,7 +6,7 @@ import pytest
 import unittest
 
 import pyiiif
-from pyiiif.pres_api.twodotone.records import Record, Collection, Manifest, Sequence
+from pyiiif.pres_api.twodotone.records import Record, Collection, Manifest, Sequence, Canvas
 
 
 class Tests(unittest.TestCase):
@@ -133,6 +133,15 @@ class Tests(unittest.TestCase):
                self.assertEquals(manifest.id, "https://www2.lib.uchicago.edu/") and \
                self.assertEquals(sequence.type, "sc:Sequence") and \
                self.assertEquals(sequence.id, "https://www.lib.uchicago.edu/about/directory/?view=staff&subject=All+Subject+Specialists")
+
+    def testManifestWithASequence(self):
+        m = Manifest("https://lib.uchicago.edu/")
+        s = Sequence("https://lib.uchicago.edu/")
+        s.canvases = [Canvas("https://lib.uchicago.edu/")]
+        m.sequences = [s]
+
+    # TODO write tests for manifest, collection, canvas, sequence, range, annotationlist creation positive and negative results
+    # TODO write tests for validation of all types of records
 
 if __name__ == "__main__":
     unittest.main()

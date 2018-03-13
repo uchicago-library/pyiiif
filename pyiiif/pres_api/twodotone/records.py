@@ -1,37 +1,19 @@
+"""Classes for building twodotone IIIF Presentation records
+"""
+
 import json
 import requests
 from urllib.parse import urlparse
 
-_valid_viewingHints = ["individuals",
-                       "paged",
-                       "continuous",
-                       "multi-part",
-                       "non-paged",
-                       "top",
-                       "facing-pages"
-                       ]
-_valid_viewingDirections = ["left-to-right",
-                            "right-to-left",
-                            "top-to-bottom",
-                            "bottom-to-top"
-                           ]
-_valid_types = ["sc:Manifest",
-                "sc:Sequence",
-                "sc:Canvas",
-                "sc:Content",
-                "sc:Collection",
-                "sc:Annotation",
-                "sc:AnnotationList",
-                "sc:Range",
-                "sc:Layer"
-               ]
-_valid_contexts = ["https://iiif.io/api/presentations/2/context.json"]
+from pyiiif.constants import valid_contexts, valid_viewingDirections, valid_viewingHints, valid_types
 
-
+# TODO define Annotation, ImageContent and OtherContent class methods
 
 class Record:
     """
-    Record interface brainstorming
+    A generic record class for IIIF Presentation records. This should not be called
+    in any client code. Instead classes thatinherit record like Collection, 
+    Manifest and Sequence and Canvas should be called
     """
     def __init__(self, *args, **kwargs):
         pass 
@@ -51,9 +33,60 @@ class Record:
         if hasattr(self, 'description'):
             out["description"] = self.description
         return json.dumps(out)
+
+    def _iterate_some_list(self, attribute_name):
+        if hasattr(self, attribute_name):
+            out = []
+            for n_thing in getattr(self, attribute_name):
+                out.append(n_thing)
+            return out
+        else:
+            raise ValueError("this instance does not have the attribute {}".format(attribute_name))
+
+    def _get_simple_property(self, property_name):
+        if hasattr(self, property_name):
+            return getattr(self, property_name)
+
+    def _set_a_list_property(self, x, property_name, list_item_class):
+        if isinstance(x, list):
+            tally = 0
+            for n_col in x:
+                if isinstance(list_item_class, list):
+                    passed = []
+                    for n_potential_type in list_item_class:
+                        if isinstance(n_col, n_potential_type):
+                            passed.append(True)
+                        else:
+                            passed.append(False)
+                    if True not in passed:
+                        raise ValueError("item {} in inputted list is not a valid type for that list.".format(str(tally)))
+                else:
+                    if not isinstance(n_col, list_item_class):
+                        raise ValueError("item {} in inputted list is not an instance of {}".format(str(tally), list_item_class))
+                tally += 1
+            setattr(self, property_name, x)
+        else:
+            raise ValueError("parameter passed to {} must be a list".format(property_name))
+    
+    def _set_numeric_property(self, x, property_name):
+        if isinstance(x, int):
+            setattr(self, property_name, x)
+        else:
+            raise ValueError("{} is being set on {} which has to have a numeric value but it is {}".format(x, property_name, type(x).__name__))
         
+    def _delete_a_property(self, property_name):
+        if hasattr(self, "property_name"):
+            self._manifests = None
+        else:
+            raise ValueError("{} hasn't been set on this instance".format(property_name))
+
     def _check_if_url_valid(self, url):
         """a method to check if an input url is well-formed or not
+
+        :param url a string representing a live web resource
+
+        :rtype bool
+        :return a boolean that asseses whether or not the url is a valid URI
 
         taken from https://stackoverflow.com/questions/7160737/python-how-to-validate-a-url-in-python-malformed-or-not/7160778
         """
@@ -65,6 +98,11 @@ class Record:
 
     def _check_if_url_is_alive(self, url):
         """a method to check if url is alive
+
+        :param url a string representing a live web resource
+
+        :rtype bool
+        :return a boolean that asseses whether or not the url given is resolvable
 
         taken from  https://stackoverflow.com/questions/16778435/python-check-if-website-exists
         """
@@ -80,7 +118,7 @@ class Record:
         return self._type
 
     def set_type(self, x):
-        if x in _valid_types:
+        if x in valid_types:
             self._type = x
         else:
             raise ValueError("{} is not a valid type for a IIIF record".format(x))
@@ -106,7 +144,7 @@ class Record:
 
     def set_context(self, x):
         if not hasattr(self, '_context'):
-            self._context = _valid_contexts[0]
+            self._context = valid_contexts[0]
         else:
             raise ValueError("there is already a context set on this instance")
 
@@ -118,7 +156,7 @@ class Record:
         return self._viewingHint
 
     def set_viewingHint(self, x):
-        if x in _valid_viewingHints:
+        if x in valid_viewingHints:
             self._viewingHint = x
         else:
             raise ValueError("{} is not a valid viewingHint".format(x))
@@ -131,7 +169,7 @@ class Record:
         return self._viewingDirection
 
     def set_viewingDirection(self, x):
-        if x in _valid_viewingDirections:
+        if x in valid_viewingDirections:
             self._viewingDirection = x
         else:
             raise ValueError("{} is not a valid viewingDirection".format(x))
@@ -168,6 +206,7 @@ class Record:
         :param json_data a string that can be loaded into a python dictionary
 
         :rtype None
+        :return None
         """
         json_data = json.loads(json_data)
         if isinstance(json_data, dict):
@@ -201,9 +240,9 @@ class Record:
             errors.append("A IIIF record must have a valid type attribute")
         else:
             pass
-        if (getattr(self, "viewingDirection", None)) and (getattr(self, "viewingDirection", None) not in _valid_viewingDirections):
+        if (getattr(self, "viewingDirection", None)) and (getattr(self, "viewingDirection", None) not in valid_viewingDirections):
             errors.append("If viewingDirection is present on a IIIF record it must be valid direction")
-        if (getattr(self, "viewingHint", None)) and (getattr(self, "viewingHint", None) not in _valid_viewingHints):
+        if (getattr(self, "viewingHint", None)) and (getattr(self, "viewingHint", None) not in valid_viewingHints):
             errors.append("If viewingHint is present on a IIIF record it must be valid hint")
         if errors:
             return (False, errors)
@@ -221,38 +260,52 @@ class Record:
 
 
 class Collection(Record):
+    """a class for building IIIF Collection records
+
+    :rtype Collection
+    :return an instance of a Colllection record
+    """
+
     def __init__(self, uri):
+        """"initializes a Collection with type sc:Collection and id of uri given at init
+        """
         self.context = "foo"
         self.type = "sc:Collection"
         self.id = uri
 
-    def get_collections(self):
-        for n_coll in self.members:
-            return n_coll
+    def __repr__(self):
+        return "<IIF Collection record for {} >".format(self.id)
 
-    def set_collections(self):
-        pass
+    def get_collections(self):
+        return self._iterate_some_list('_collections')
+
+    def set_collections(self, x):
+        self._set_a_list_property(x, '_collections', Collection)
 
     def del_collections(self):
-        pass
+        if hasattr(self, "_collections"):
+            self._collections = None
 
     def get_manifests(self):
-        pass
+        return self._iterate_some_list('_manifests')
 
-    def set_manifests(self):
-        pass
+    def set_manifests(self, x):
+        self._set_a_list_property(x, '_manifests', Manifest)
 
     def del_manifests(self):
-        pass
+        self._delete_a_property("_manifests")
 
     def get_members(self):
-        pass
+        return self._iterate_some_list('_members')
 
-    def set_members(self):
-        pass
+    def set_members(self, x):
+        self._set_a_list_property(x, '_manifests', [Manifest, Collection])
 
     def del_members(self):
-        pass
+        if hasattr(self, "_members"):
+            self._manifests = None
+        else:
+            raise ValueError("members hasn't been set on this instance")
 
     collections = property(get_collections, set_collections, del_collections)
     manifests = property(get_manifests, set_manifests, del_manifests)
@@ -266,22 +319,23 @@ class Manifest(Record):
         self.id = uri
 
     def get_sequences(self):
-        pass
+        return self._iterate_some_list("_sequences")
 
-    def set_sequences(self):
+    def set_sequences(self, x):
+        self._set_a_list_property(x, "_sequences", Sequence)
         pass
 
     def del_sequences(self):
-        pass
+        self._delete_a_property("_structures")
 
     def get_structures(self):
-        pass
+        return self._iterate_some_list("_structures")
 
-    def set_structures(self):
-        pass
+    def set_structures(self, x):
+        self._set_a_list_property(x, "_structures", Range)
 
     def del_structures(self):
-        pass
+        self._delete_a_property("_structures")
 
     sequences = property(get_sequences, set_sequences, del_sequences)
     structures = property(get_structures, set_structures, del_structures)
@@ -294,40 +348,25 @@ class Sequence(Record):
         self.canvases = []
 
     def get_canvases(self):
-        """a method to get the canvases available in a sequence. 
-
-        :rtype list
-        :returns a list of the identifiers for the canvases associated
-        with the sequence
-        """
-        output = []
-        for n_canvas in self.canvases:
-            output.append(n_canvas.get("id"))
-        return output
+        return self._iterate_some_list("_canvases")
 
     def set_canvases(self, x):
-        self._canvases = x 
+        self._set_a_list_property(x, "_canvases", Canvas)
 
     def del_canvases(self):
-        self._canvases = None
+        self._delete_a_property("_canvases")
 
     def del_canvas(self, a_canvas):
         """a method to delete a canvas from a sequence
 
         takes a canvas object, checks if that object exists in the sequence
         and if it does deletes it from the list.
-
-        :rtype bool
-        :returns a Boolean value whether or not anything was deleted
         """
-        output = None
-        try:        
-            pos_to_remove = self._canvases.index(a_canvas)
-            self._canvases[pos_to_remove]
-            output = True
-        except ValueError:
-            output = False
-        return output
+        if getattr(self, "_canvas", None):
+            the_list = getattr(self, "_canvases")
+            pos_to_remove = the_list.index(a_canvas)
+            del the_list[pos_to_remove]
+            self._set_a_list_property(the_list, "_canvases", Canvas)
 
     canvases = property(get_canvases, set_canvases, del_canvases)
 
@@ -336,29 +375,69 @@ class Canvas(Record):
     def __init__(self, uri):
         self.id = uri
         self.type = "sc:Canvas"
-        self.set_images()
 
     def get_images(self):
-        pass
+        return self._iterate_some_list("_images")
 
-    def set_images(self):
-        self.images = []
+    def set_images(self, x):
+        self._set_a_list_property(x, "_canvases", Annotation)
 
     def del_images(self):
-        self.images = None
+        self._delete_a_property("_images")
 
     def get_otherContent(self):
-        pass
+        return self._iterate_some_list("_otherContent")
 
-    def set_otherContent(self):
-        pass
+    def set_otherContent(self, x):
+        self._set_a_list_property(x, "_otherContent", AnnotationList)
 
     def del_otherContent(self):
-        pass
+        self._delete_a_property("_otherContent")
+
+    def get_height(self):
+        return self._get_simple_property("_height")
+
+    def set_height(self, x):
+        self._set_numeric_property(x, "_height")
+
+    def del_height(self):
+        self._delete_a_property("_height")
+
+    def get_width(self):
+        return self._get_simple_property("_width")
+
+    def set_width(self, x):
+        self._set_numeric_property(x, "_width")
+
+    def del_width(self):
+        self._delete_a_property("_width")
+
+    def validate(self):
+        if hasattr(self, 'height') and hasattr(self, 'width') and hasattr(self, 'label') and hasattr(self, 'images'):
+            return True
+        else:
+            return False
 
     images = property(get_images, set_images, del_images)
+    height = property(get_height, set_height, del_height)
+    width = property(get_height, set_height, del_height)
     otherContent = property(get_otherContent, set_otherContent, del_otherContent)
 
+class AnnotationList(Record):
+    def __init__(self, uri):
+        self.id = uri
+        self.type = "sc:AnnotationList"
+
+    def get_resources(self):
+        return self._iterate_some_list("_resources")
+
+    def set_resources(self, x):
+        return self._set_a_list_property(x, "_resources", Annotation)
+
+    def del_resources(self):
+        self._delete_a_property("_resources")
+
+    resources = property(get_resources, set_resources, del_resources)
 
 class Annotation(Record):
     def __init__(self):
@@ -396,6 +475,41 @@ class OtherContent(Record):
 
     format = property(get_format, set_format, del_format)
 
+class Range(Record):
+    def __init__(self, uri):
+        self.id = uri
+        self.type = "sc:Range"
+        
+    def get_canvases(self):
+        return self._iterate_some_list("_canvases")
+
+    def set_canvases(self, x):
+        return self._set_a_list_property(x, "_canvases", Canvas)
+
+    def del_canvases(self):
+        self._delete_a_property("_canvases")
+
+    def get_members(self):
+        return self._iterate_some_list("_members")
+
+    def set_members(self, x):
+        return self._set_a_list_property(x, "_members", [Canvas, Range])
+
+    def del_members(self):
+        self._delete_a_property("_members")
+
+    def get_ranges(self):
+        return self._iterate_some_list("_ranges")
+
+    def set_ranges(self, x):
+        return self._set_a_list_property(x, "_ranges", Range)
+
+    def del_ranges(self):
+        self._delete_a_property("_ranges")
+
+    canvases = property(get_canvases, set_canvases, del_canvases)
+    members = property(get_members, set_members, del_members)
+    ranges = property(get_ranges, set_ranges, del_ranges)
 
 # JSON-LD @types to Class
 ttc = {
@@ -404,5 +518,7 @@ ttc = {
     "sc:Sequence": Sequence,
     "sc:Canvas": Canvas,
     "oa:Annotation": Annotation,
+    "sc:AnnotationList": AnnotationList,
+    "sc:Range": Range,
     "dctypes:Image": ImageContent
 }

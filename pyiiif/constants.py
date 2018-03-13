@@ -19,3 +19,30 @@ valid_schemes = [
     "http",
     "https"
 ]
+
+valid_viewingHints = ["individuals",
+                       "paged",
+                       "continuous",
+                       "multi-part",
+                       "non-paged",
+                       "top",
+                       "facing-pages"
+                       ]
+valid_viewingDirections = ["left-to-right",
+                            "right-to-left",
+                            "top-to-bottom",
+                            "bottom-to-top"
+                           ]
+valid_types = ["sc:Manifest",
+               "sc:Sequence",
+               "sc:Canvas",
+               "sc:Content",
+               "sc:Collection",
+               "sc:Annotation",
+               "sc:AnnotationList",
+               "sc:Range",
+               "sc:Layer"
+              ]
+
+valid_contexts = ["https://iiif.io/api/presentations/2/context.json"]
+
