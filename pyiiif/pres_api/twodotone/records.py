@@ -370,10 +370,6 @@ class ImageResource(Record):
     def del_format(self):
         self._delete_a_property("_format")
 
-    def set_id(self, server_host, identifier):
-        print("hello from ImageResource.set_id")
-
-        return None
     def get_service(self):
         if getattr(self, "_service", None):
             return self._service
