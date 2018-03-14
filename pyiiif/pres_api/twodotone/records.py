@@ -1,10 +1,12 @@
 """Classes for building twodotone IIIF Presentation records
 """
 
+from os.path import join
 import json
 import requests
-from urllib.parse import urlparse
+from urllib.parse import urlparse, ParseResult
 
+from pyiiif.utils import escape_identifier
 from pyiiif.constants import valid_contexts, valid_viewingDirections, valid_viewingHints, valid_types
 
 # TODO define Annotation, ImageContent and OtherContent class methods
@@ -344,11 +346,20 @@ class ImageResource(Record):
 
     __name__ = "ImageResource"
 
-    def __init__(self, uri, mimetype):
-        self.id = uri + "/full/full/0/default.jpg"
+    def __init__(self, server_host, identifier, mimetype):
+        url = ParseResult(scheme="https", netloc=server_host,
+                          path=join("/", escape_identifier(identifier)), params="", query="", fragment="")
+        try:
+            r = requests.get(url.geturl())
+            data = r.json()
+            data["@context"]
+            data["@id"]
+        except:
+            raise ValueError("{} is not a IIIF Image API url".format(url.geturl()))
+        self.id = url.geturl()
         self.type = "dctypes:Image"
         self.format = mimetype
-        self.service = Service(uri)
+        self.service = Service(url.geturl())
 
     def get_format(self):
         return self._get_simple_property("_format")
@@ -359,6 +370,10 @@ class ImageResource(Record):
     def del_format(self):
         self._delete_a_property("_format")
 
+    def set_id(self, server_host, identifier):
+        print("hello from ImageResource.set_id")
+
+        return None
     def get_service(self):
         if getattr(self, "_service", None):
             return self._service
