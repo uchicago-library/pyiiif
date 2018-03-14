@@ -24,7 +24,7 @@ You have a properly formatted IIIF Manifest record with the correct @context, @t
 And, for a more complicated example...
 
 ```python
-from pyiiif.pres_api.twodotone.records import Manifest, Canvas, ImageResource
+from pyiiif.pres_api.twodotone.records import Manifest, Canvas, ImageResource, Annotation, Sequence
 
 # start with a manifest object and remmeber like with every object 
 # you create the uri has to be resolvable
