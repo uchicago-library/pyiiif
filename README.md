@@ -11,16 +11,52 @@ It provides a pythonic interface to generating IIIF Presentation API records. Th
 A person with a nominal amount of programming experience can create a IIIF record by simply typing the following:
 
 ```python
->>> from pyiiif.pres_api.twodotone.records import Manifest
->>> r = Manifest()
->>> r.id = "https://example.org/foo"
->>> r.type = "sc:Manifest"
->>> r.label = "Fun with IIIF"
->>> r.description = "This is my first IIIF manifest. Please be polite with your criticism"
->>> str(r)
+from pyiiif.pres_api.twodotone.records import Manifest
+r = Manifest("https://example.org/manifest")
+r.type = "sc:Manifest"
+r.label = "Fun with IIIF"
+r.description = "This is my first IIIF manifest. Please be polite with your criticism"
+str(r)
 ```
 
-And, you have a properly formatted IIIF Manifest record with the correct @context, @type and @id attributes as well as a a label and a description. The sequence list will be empty for now. From here, you just need to write the string into  a dictionary
+You have a properly formatted IIIF Manifest record with the correct @context, @type and @id attributes as well as a a label and a description. The sequence list will be empty for now. From here, you just need to write the string into  a dictionary
+
+And, for a more complicated example...
+
+```python
+from pyiiif.pres_api.twodotone.records import Manifest, Canvas, ImageResource
+
+# start with a manifest object and remmeber like with every object 
+# you create the uri has to be resolvable
+# but, 404s are still acceptable
+manifest = Manifest()
+manifest.id = "http://example.org/foo"
+manifest.type = "sc:Manifest"
+manifest.label = "Fun with IIIF"
+manifest.description = "This is my first IIIF manifest. Please be polite with your criticism"
+
+# every good IIIF manifest has to have at least one sequence
+sequence = Sequence("http://example.org/sequence/1")
+
+# and now to make a simple canvas
+canvas = Canvas("http://example.org/canvas/1")
+canvas.label = "A Canvas"
+
+# now to make an annotation for that canvas
+annotate = Annotation("http://example.org/annotation/1")
+
+# now to make an image resource to put in the canvas
+img = ImageResource("http://example.org/an_image.jpg")
+
+#  last but not least you have to put all the pieces together...
+annotate.resource = img
+canvas.images = [annotate]
+sequence.canvases = [canvas]
+manifest.sequences = [sequence]
+
+# and voila! you have a IIIF manifest record!
+str(manifest)
+```
 
 ## Quickstart
 
