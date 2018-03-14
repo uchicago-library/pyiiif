@@ -29,8 +29,7 @@ from pyiiif.pres_api.twodotone.records import Manifest, Canvas, ImageResource, A
 # start with a manifest object and remmeber like with every object 
 # you create the uri has to be resolvable
 # but, 404s are still acceptable
-manifest = Manifest()
-manifest.id = "http://example.org/foo"
+manifest = Manifest("http://example.org/foo")
 manifest.type = "sc:Manifest"
 manifest.label = "Fun with IIIF"
 manifest.description = "This is my first IIIF manifest. Please be polite with your criticism"
