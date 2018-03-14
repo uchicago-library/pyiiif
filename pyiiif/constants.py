@@ -45,5 +45,7 @@ valid_types = ["sc:Manifest",
                "dctypes:Image"
               ]
 
-valid_contexts = ["https://iiif.io/api/presentations/2/context.json"]
+valid_contexts = {"presentation":"https://iiif.io/api/presentation/2/context.json",
+                  "image": "https://iiif.io/api/image/2/context.json"
+                 }
 

@@ -29,7 +29,8 @@ class Record:
     def __str__(self):
         out = {}
         out["@id"] = self.id
-        out["@type"] = self.type
+        if hasattr(self, "type"):
+            out["@type"] = self.type
         if hasattr(self, 'context'):
             out["@context"] = self.context
         if hasattr(self, 'viewingHint'):
@@ -155,8 +156,13 @@ class Record:
         return self._context
 
     def set_context(self, x):
-        if not hasattr(self, '_context'):
-            self._context = valid_contexts[0]
+        if not hasattr(self, '_context') and isinstance(x, str):
+            context = valid_contexts.get(x)
+            if context:
+                self._context = context
+            else:
+                raise ValueError("{} is not a valid context option for IIIF. It must be one of {}".\
+                                 format(x, ', '.join(valid_contexts.keys())))
         else:
             raise ValueError("there is already a context set on this instance")
 
@@ -225,7 +231,18 @@ class Record:
             self.id = json_data.get("@id")
             self.type = json_data.get("@type")
             if json_data.get("@context"):
-                self.context = json_data.get("@context")
+                pot_context = json_data.get("@context")
+                check = False
+                lookup = None
+                for key, value in valid_contexts.items():
+                    if value == pot_context:
+                        check = True
+                        lookup = key
+                        break
+                if check:
+                    self.context = lookup
+                else:
+                    raise ValueError("{} is not a valid IIIF context".format(pot_context))
             if json_data.get("label"):
                 self.label = json_data.get("label")
             if json_data.get("viewingHint"):
@@ -261,6 +278,24 @@ class Record:
         else:
             return (True, errors)
 
+    def to_dict(self):
+        out = {}
+        out["@id"] = self.id
+        out["@type"] = self.type
+        if hasattr(self, "context"):
+            out["@context"] = self.context
+        properties = vars(self)
+        for n_property in properties:
+            if n_property in ["_id", "_type", "_context"]:
+                pass
+            else:
+                value = getattr(self, n_property, None)
+                if isinstance(value, list):
+                    out[n_property[1:]] = [x.to_dict() for x in getattr(self, n_property, None)]
+                if isinstance(value, str) or isinstance(value, int):
+                    out[n_property] = getattr(self, n_property, None)
+        return out
+
     type = property(get_type, set_type, del_type)
     id = property(get_id, set_id, del_id)
     context = property(get_context, set_context, del_context)
@@ -269,6 +304,81 @@ class Record:
     label = property(get_label, set_label, del_label)
     description = property(get_description, set_description, del_description)
 
+class ServerProfile(object):
+    __name__ = "IIIF ServerProfile"
+
+    def __init__(self):
+        self.supports = ["canonicalLinkHeader",
+                         "profileLinkHeader",
+                         "mirroring",
+                         "rotationAboveArbitrary",
+                         "regionSquare",
+                         "sizeAboveFull"
+                        ]
+        self.qualities = ["default", "gray", "bitonal"]
+        self.format = ["jpg", "png", "gif", "webp"]
+
+    def to_dict(self):
+        out = {}
+        out["supports"] = self.supports
+        out["qualities"] = self.qualities
+        out["format"] = self.format       
+        return out        
+
+
+class Service(Record):
+    def __init__(self, uri):
+        self.id = uri
+        self.context = "image"
+        self.profile = ServerProfile()
+
+    def to_dict(self):
+        out = {}
+        out["@id"] = self.id
+        out["@context"] = self.context
+        out["profile"] = ["https://iiif.io/api/image/2/level2.json",
+                          self.profile.to_dict()]
+        return out
+
+class ImageResource(Record):
+
+    __name__ = "ImageResource"
+
+    def __init__(self, uri, mimetype):
+        self.id = uri + "/full/full/0/default.jpg"
+        self.type = "dctypes:Image"
+        self.format = mimetype
+        self.service = Service(uri)
+
+    def get_format(self):
+        return self._get_simple_property("_format")
+
+    def set_format(self, x):
+        self._set_simple_property(x, "_format")
+
+    def del_format(self):
+        self._delete_a_property("_format")
+
+    def get_service(self):
+        if getattr(self, "_service", None):
+            return self._service
+
+    def set_service(self, x):
+        self._service = x
+
+    def del_service(self):
+        self._delete_a_property("_service")
+
+    def to_dict(self):
+        out = {}
+        out["@id"] = self.id
+        out["@type"] = self.type
+        out["format"] = self.format
+        out["service"] =  self.service.to_dict()
+        return out
+
+    service = property(get_service, set_service, del_service)
+    format = property(get_format, set_format, del_format)
 
 class Collection(Record):
     """a class for building IIIF Collection records
@@ -282,7 +392,7 @@ class Collection(Record):
     def __init__(self, uri):
         """"initializes a Collection with type sc:Collection and id of uri given at init
         """
-        self.context = "foo"
+        self.context = "presentation"
         self.type = "sc:Collection"
         self.id = uri
 
@@ -330,7 +440,7 @@ class Manifest(Record):
     __name__ = "Manifest"    
 
     def __init__(self, uri):
-        self.context = "foo"
+        self.context = "presentation"
         self.type = "sc:Manifest"
         self.id = uri
 
@@ -402,7 +512,7 @@ class Canvas(Record):
         return self._iterate_some_list("_images")
 
     def set_images(self, x):
-        self._set_a_list_property(x, "_canvases", Annotation)
+        self._set_a_list_property(x, "_images", Annotation)
 
     def del_images(self):
         self._delete_a_property("_images")
@@ -462,6 +572,20 @@ class AnnotationList(Record):
     def del_resources(self):
         self._delete_a_property("_resources")
 
+    def to_dict(self):
+        out = {}
+        out["@id"] = self.id
+        out["@type"] = self.type
+        out["resources"] = []
+        if hasattr(self, "resources", None):
+            for resource in self.resources:
+                n_item = resource.to_dict()
+                out["resources"].append(resource)
+        return out
+
+    def __str__(self):
+        return str(self.to_dict())
+
     resources = property(get_resources, set_resources, del_resources)
 
 class Annotation(Record):
@@ -471,6 +595,7 @@ class Annotation(Record):
     def __init__(self, uri):
         self.id = uri
         self.type = "oa:Annotation"
+        self.motivation = "sc:Painting"
 
     def get_format(self):
         return self._get_simple_property("_format")
@@ -482,55 +607,37 @@ class Annotation(Record):
         self._delete_a_property("_format") 
 
     def get_resource(self):
-        return self._get_simple_property("_format")
+        return self._get_simple_property("_resource")
 
     def set_resource(self, x):
-        if isinstance(x, ImageContent):
-            self._set_simple_property(x, "_resource")
+        if isinstance(x, ImageResource):
+            self._resource = x
 
     def del_resource(self):
         self._delete_a_property("_resource")
 
+    def get_motivation(self):
+        return self._get_simple_property("_motivation")
+
+    def set_motivation(self, x):
+        self._set_simple_property(x, "_motivation")
+
+    def del_motivation(self):
+        self._delete_a_property("_motivation")
+
+    def to_dict(self):
+        out = {}
+        out["@id"] = self.id
+        out["@type"] = self.type
+        out["motivation"] = self.motivation
+        if getattr(self, "resource", None):
+            print("hello from check for resource prop")
+            out["resource"] = self.resource.to_dict()
+        return out
+
     format = property(get_format, set_format, del_format)
     resource = property(get_resource, set_resource, del_resource)
-
-class ImageContent(Record):
-
-    __name__ = "ImageContent"
-
-    def __init__(self, uri, mimetype):
-        self.id = uri
-        self.type = "dctypes:Image"
-        self.format = mimetype
-
-    def get_format(self):
-        return self._get_simple_property("_format")
-
-    def set_format(self, x):
-        self._set_simple_property(x, "_format")
-
-    def del_format(self):
-        self._delete_a_property("_format")
-
-    format = property(get_format, set_format, del_format)
-
-class OtherContent(Record):
-
-    __name__ = "OtherContent"
-
-    def __init__(self):
-        pass
-
-    def get_format(self):
-        pass
-
-    def set_format(self):
-        pass
-
-    def del_format(self):
-        pass
-
-    format = property(get_format, set_format, del_format)
+    motivation = property(get_motivation, set_motivation, del_motivation)
 
 class Range(Record):
 
@@ -580,5 +687,5 @@ ttc = {
     "oa:Annotation": Annotation,
     "sc:AnnotationList": AnnotationList,
     "sc:Range": Range,
-    "dctypes:Image": ImageContent
+    "dctypes:Image": ImageResource
 }

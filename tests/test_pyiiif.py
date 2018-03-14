@@ -6,7 +6,8 @@ import pytest
 import unittest
 
 import pyiiif
-from pyiiif.pres_api.twodotone.records import Annotation, Record, Collection, Manifest, Sequence, Canvas, AnnotationList, Range
+from pyiiif.pres_api.twodotone.records import Annotation, Record, Collection, Manifest, \
+    Sequence, Canvas, AnnotationList, Range, ImageResource
 
 
 class Tests(unittest.TestCase):
@@ -19,9 +20,6 @@ class Tests(unittest.TestCase):
         # Perform any tear down that should
         # occur after every test
         pass
-
-    def testPass(self):
-        self.assertEqual(True, True)
 
     def testVersionAvailable(self):
         x = getattr(pyiiif, "__version__", None)
@@ -167,6 +165,39 @@ class Tests(unittest.TestCase):
         s.canvases = [Annotation("https://lib.uchicago.edu/")]
         return self.assertEquals(str(s.canvases), "[Annotation for https://lib.uchicago.edu/]") and \
                self.assertEquals(s.id, 'https://lib.uchicago.edu/') 
+
+    def testGetCanvasDict(self):
+        canvas = Canvas("https://lib.uchicago.edu/canvas")
+        canvas.height = 1000
+        canvas.width = 509
+        canvas.label = "A Canvas"
+        canvas.description = "This a IIIF Canvas created programatically"
+        annotation = Annotation("https://lib.uchicago.edu/annotation")
+        an_image = ImageResource("https://iiif-server.lib.uchicago.edu/default-photo.original.jpg", "image/jpeg")
+        annotation.resource = an_image
+        canvas.images = [annotation]
+        print(canvas.to_dict())
+        return self.assertEquals(canvas.to_dict()["images"][0]["resource"]["@id"], "https://iiif-server.lib.uchicago.edu/default-photo.original.jpg/full/full/0/default.jpg") and \
+               self.assertEquals(canvas.to_dict()["images"][0]["resource"]["format"], "image/jpeg")
+
+    def testGetManifestDict(self):
+        manifest = Manifest("http://lib.uchicago.edu/manifest")
+        manifest.viewingHint = "individuals"
+        manifest.viewingDirection = "left-to-right"
+        sequence = Sequence("https://lib.uchicago.edu/sequence")
+        canvas = Canvas("https://lib.uchicago.edu/canvas")
+        canvas.height = 1000
+        canvas.width = 509
+        canvas.label = "A Canvas"
+        canvas.description = "This a IIIF Canvas created programatically"
+        annotation = Annotation("https://lib.uchicago.edu/annotation")
+        an_image = ImageResource("https://iiif-server.lib.uchicago.edu/default-photo.original.jpg", "image/jpeg")
+        annotation.resource = an_image
+        canvas.images = [annotation]
+        sequence.canvases = [canvas]
+        manifest.sequences = [sequence]
+        return self.assertEquals(len(manifest.to_dict()["sequences"]), 1) and \
+               self.assertEquals(manifest.to_dict()["viewingHint"] == "individuals")
 
 if __name__ == "__main__":
     unittest.main()
