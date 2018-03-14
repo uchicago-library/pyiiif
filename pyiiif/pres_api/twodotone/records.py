@@ -346,17 +346,17 @@ class ImageResource(Record):
 
     __name__ = "ImageResource"
 
-    def __init__(self, server_host, identifier, mimetype):
+    def __init__(self, server_host, identifier, iiif_request, mimetype):
         url = ParseResult(scheme="https", netloc=server_host,
                           path=join("/", escape_identifier(identifier)), params="", query="", fragment="")
         try:
-            r = requests.get(url.geturl())
+            r = requests.get(url.geturl(), "HEAD")
             data = r.json()
             data["@context"]
             data["@id"]
         except:
             raise ValueError("{} is not a IIIF Image API url".format(url.geturl()))
-        self.id = url.geturl()
+        self.id = url.geturl() + iiif_request
         self.type = "dctypes:Image"
         self.format = mimetype
         self.service = Service(url.geturl())
