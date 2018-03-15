@@ -377,7 +377,8 @@ class Record:
 
     def traverse_looking_for_lists(self, a_dict):
         for key,value in a_dict:
-            if isinstance()
+            if isinstance(value, list):
+                pass
     def load(self, json_data, out={}):
         """load data from a json record
 
