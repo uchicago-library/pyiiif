@@ -375,25 +375,9 @@ class Record:
             if value == pot_context:
                 return key                        
 
-    def load_items_in_a_list(self, a_list, out=None):
-        print("hi from load_items_in_a_list")
-        for n in a_list:
-            instance = ttc[n["@type"]]
-            if instance.__name__ == "Sequence":
-                instance.canvases = self.load_items_in_a_list(n["canvases"], out=instance)
-            if instance.__name__ == "Canvas":
-                new = Canvas(n["@id"])
-                if n.get("label"):
-                    new.label = n.get("label")
-                if n.get("description"):
-                    new.description = n.get("label")
-                if n.get("height"):
-                    new.height = n.get("height")
-                if n.get("width"):
-                    new.width = n.get("width")
-        print(out.canvases)
-        return out
-
+    def traverse_looking_for_lists(self, a_dict):
+        for key,value in a_dict:
+            if isinstance()
     def load(self, json_data, out={}):
         """load data from a json record
 
@@ -419,42 +403,8 @@ class Record:
             json_data = json.loads(json_data)
         except JSONDecodeError:
             raise ValueError("The string you entered cannot be converted to JSON")
-        
         if isinstance(json_data, dict):
-            keys = [n for n in json_data.keys()] 
-            for key in keys:
-                if key == "sequences":
-                    print("hi")
-                    self.sequences = self.load_items_in_a_list(json_data.get(key))
-                    print(self.sequences)
-                elif key == "manifests":
-                    self.manifests = self.load_items_in_a_list(json_data.get(key))
-                elif key == "members":
-                    self.manifests = self.load_items_in_a_list(json_data.get(key))
-                elif key == "collections":
-                    self.collections = self.load_items_in_a_list(json_data.get(key))
-                elif key == "structures":
-                    self.structures = self.load_items_in_a_list(json_data.get(key))
-                elif key == "canvases":
-                    self.canvases = self.load_items_in_a_list(json_data.get(key))
-                elif key == "ranges":
-                    self.ranges = self.load_items_in_a_list(json_data.get(key))
-                elif key == "@context":
-                    pass
-                elif key == "@id":
-                    self.id = json_data.get("@id")
-                elif key == "@type":
-                    self.type = json_data.get("@type")
-                elif key == "viewingHint":
-                    self.viewingHint = json_data.get("viewingHint")
-                elif key == "viewingDirection":
-                    self.viewingDirection = json_data.get("viewingDirection")
-                elif key == "description":
-                    self.description = json_data.get("description")
-                elif key == "label":
-                    self.label = json_data.get("label")
-                else:
-                    raise ValueError("{} is not an expected key in a IIIF record".format(key))
+            self.traverse_looking_for_lists(json_data)
         else: 
             raise ValueError("Require a single JSON record")
         """
@@ -577,7 +527,7 @@ class Record:
             else:
                 value = getattr(self, n_property, None)
                 if isinstance(value, list):
-                    out[n_property] = [x.to_dict() for x in getattr(self, n_property, None)]
+                    out[n_property[1:]] = [x.to_dict() for x in getattr(self, n_property, None)]
                 if isinstance(value, str) or isinstance(value, int):
                     out[n_property[1:]] = getattr(self, n_property, None)
         return out
