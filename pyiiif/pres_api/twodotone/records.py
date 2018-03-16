@@ -375,10 +375,30 @@ class Record:
             if value == pot_context:
                 return key                        
 
-    def traverse_looking_for_lists(self, a_dict):
-        for key,value in a_dict:
+    def traverse_looking_for_lists(self, a_dict, out=None):
+        print("hello from traverse_looking_for_lists()")
+        if not out:
+            out = ttc[a_dict.get("@type")](a_dict.get("@id"))
+            out = ttc[a_dict.get("@type")](a_dict.get("@id"))
+            out.id = a_dict.get("@id")
+            out.type = a_dict.get("@type")
+            out.label = a_dict.get("label")
+            out.description = a_dict.get("description")
+        for key,value in a_dict.items():
             if isinstance(value, list):
-                pass
+                print("found a list at {}".format(key))
+                if key == 'sequences':
+                    out.sequences = []
+                temp_list = []
+                for n_thing in value:
+                    if isinstance(n_thing, dict):
+                        print("hello from conditional in for-loop of list type-check conditional")
+                        new_thing = ttc[a_dict.get("@type")](n_thing.get("@id"))
+                        temp_list.append(new_thing) 
+                        print(temp_list)
+                        self.traverse_looking_for_lists(n_thing, out=out)
+        return out
+
     def load(self, json_data, out={}):
         """load data from a json record
 
@@ -390,14 +410,6 @@ class Record:
         Finally, so long as both checks pass, it    
         takes a stringified JSON record and loads it into an instance of Record
 
-        collections
-        manifests
-        members
-        sequences
-        structures
-        canvases
-        ranges
-
         :param json_data a string that can be loaded into a python dictionary
         """
         try:
@@ -405,7 +417,10 @@ class Record:
         except JSONDecodeError:
             raise ValueError("The string you entered cannot be converted to JSON")
         if isinstance(json_data, dict):
-            self.traverse_looking_for_lists(json_data)
+           print("hello from instance typecheck in load()")
+           out = self.traverse_looking_for_lists(json_data, out=out)
+           print(type(out))
+           print(vars(out))
         else: 
             raise ValueError("Require a single JSON record")
         """
