@@ -373,31 +373,34 @@ class Record:
         pot_context = a_url
         for key, value in valid_contexts.items():
             if value == pot_context:
-                return key                        
+                return key
 
-    def traverse_looking_for_lists(self, a_dict, out=None):
+    def traverse_looking_for_lists(self, a_dict, depth=0, breadcrumb="", parent=None):
         print("hello from traverse_looking_for_lists()")
-        if not out:
-            out = ttc[a_dict.get("@type")](a_dict.get("@id"))
-            out = ttc[a_dict.get("@type")](a_dict.get("@id"))
-            out.id = a_dict.get("@id")
-            out.type = a_dict.get("@type")
-            out.label = a_dict.get("label")
-            out.description = a_dict.get("description")
-        for key,value in a_dict.items():
+        print(a_dict.get("@type"))
+        for key, value in a_dict.items():
             if isinstance(value, list):
                 print("found a list at {}".format(key))
                 if key == 'sequences':
-                    out.sequences = []
+                    self.sequences = []
                 temp_list = []
                 for n_thing in value:
                     if isinstance(n_thing, dict):
                         print("hello from conditional in for-loop of list type-check conditional")
-                        new_thing = ttc[a_dict.get("@type")](n_thing.get("@id"))
+                        new_thing = ttc[n_thing.get("@type")](n_thing.get("@id"))
                         temp_list.append(new_thing) 
-                        print(temp_list)
-                        self.traverse_looking_for_lists(n_thing, out=out)
-        return out
+                        depth += 1
+                        breadcrumb += key + ">>"
+                        parent = new_thing
+                        self.traverse_looking_for_lists(n_thing, depth=depth,
+                                                        breadcrumb=breadcrumb, parent=parent)
+            elif a_dict.get("@type") == "dctypes:Image":
+                print(a_dict)
+        self.traverse_looking_for_lists(a_dict, depth=depth,
+                                        breadcrumb=breadcrumb, parent=parent)
+        print(type(parent))
+        print(depth)
+        print(breadcrumb)
 
     def load(self, json_data, out={}):
         """load data from a json record
@@ -418,91 +421,9 @@ class Record:
             raise ValueError("The string you entered cannot be converted to JSON")
         if isinstance(json_data, dict):
            print("hello from instance typecheck in load()")
-           out = self.traverse_looking_for_lists(json_data, out=out)
-           print(type(out))
-           print(vars(out))
+           self.traverse_looking_for_lists(json_data)
         else: 
             raise ValueError("Require a single JSON record")
-        """
-        if isinstance(json_data, dict):
-            keys = [n for n in l] 
-            special_keys = ["@id", "type", "@context"]
-            regular_keys = [n for n in keys if n not in special_keys]
-            for reg_key in regular_keys:
-                value = json_data.get(reg_key)
-                if reg_key == 'viewingHint':
-                    self.viewingHint = value
-                elif reg_key == 'viewingDirection':
-                    self.viewingDirection = value
-                elif reg_key == 'label':
-                    self.label = value
-                elif reg_key == 'description':
-                    self.description = value
-                elif reg_key == "members":
-                    new_list = []
-                    for n_item in json_data.get("members"):
-                        if n_item["@type"] == "sc:Manifest":
-                            new = Manifest(n_item["@id"])
-                            new.context = valid_contexts.get(self._convert_context_url_into_lookup(n_item["@context"]))
-                            new.type = json_data.get("@type")
-                            new.label = json_data.get("label")
-                            new.description = json_data.get("description")
-                            new_list.append(new)
-                        if n_item["@type"] == "sc:Manifest":
-                            new = Manifest(n_item["@id"])
-                            new.context = valid_contexts.get(self._convert_context_url_into_lookup(n_item["@context"]))
-                            new.type = json_data.get("@type")
-                            new.label = json_data.get("label")
-                            new.description = json_data.get("description")
-                            new_list.append(new)
-
-                elif reg_key == "collections":
-                    new_list = []
-                    for n_item in json_data.get("collections"):
-                        if n_item["@type"] == "sc:Collection":
-                            new = Collection(n_item["@id"])
-                            new.context = valid_contexts.get(self._convert_context_url_into_lookup(n_item["@context"]))
-                            new.type = json_data.get("@type")
-                            new.label = json_data.get("label")
-                            new.description = json_data.get("description")
-                            new_list.append(new)
-                elif reg_key == "manifests":
-                    new_list = []
-                    for n_item in json_data.get("manifests"):
-                        if n_item["@type"] == "sc:Manifest":
-                            new = Collection(n_item["@id"])
-                            new.context = valid_contexts.get(self._convert_context_url_into_lookup(n_item["@context"]))
-                            new.type = json_data.get("@type")
-                            new.label = json_data.get("label")
-                            new.description = json_data.get("description")
-                            new_list.append(new)
-
-            self.id = json_data.get("@id")
-            self.type = json_data.get("@type")
-            self.context = self._convert_context_url_into_lookup(json_data.get("@context"))
-
-            if json_data.get("@context"):
-                pot_context = json_data.get("@context")
-                check = False
-                lookup = None
-                for key, value in valid_contexts.items():
-                    if value == pot_context:
-                        check = True
-                        lookup = key
-                        break
-                if check:
-                    self.context = lookup
-                else:
-                    raise ValueError("{} is not a valid IIIF context".format(pot_context))
-            if json_data.get("label"):
-                self.label = json_data.get("label")
-            if json_data.get("viewingHint"):
-                self.viewingHint = json_data.get("viewingHint")
-            if json_data.get("viewingDirection"):
-                self.viewingDirection = json_data.get("viewingDirection")
-        else:
-            raise ValueError("JSON string loaded must convert to a dictionary")
-        """
 
     def validate(self):
         """validate this record
@@ -557,9 +478,21 @@ class Record:
     description = property(get_description, set_description, del_description)
 
 class ServerProfile(object):
+    """a class for building IIIF Collection ServerProfile information on an Service instance
+
+    This class should not normally be called independentaly of the Service class.
+    """
     __name__ = "IIIF ServerProfile"
 
     def __init__(self):
+        """initializes an instance of the class
+
+        Right now it is hard-coded to set supports, qualities and formats with generic IIIF 2.0 compliant values
+
+        TODO: allow dynamic loading of this information 
+
+        :rtype :class:`ServerProfile`
+        """
         self.supports = ["canonicalLinkHeader",
                          "profileLinkHeader",
                          "mirroring",
@@ -571,6 +504,8 @@ class ServerProfile(object):
         self.format = ["jpg", "png", "gif", "webp"]
 
     def to_dict(self):
+        """a method to transform the instance into a dictionary 
+        """
         out = {}
         out["supports"] = self.supports
         out["qualities"] = self.qualities
@@ -579,12 +514,29 @@ class ServerProfile(object):
 
 
 class Service(Record):
+    """a class for building IIIF Server information on a ServerProfile instance
+
+    This class should not normally be called independantly of the ImageResource class.
+    """
+
     def __init__(self, uri):
+        """initializes an instance of the class
+
+        It takes the uri passed to it from the instantiating ImageResource
+        and sets the id of the instance
+
+        :param str uri: a string representing a resolvable IIIF Image API resource
+
+        :rtype :class:`ServerProfile`
+        """
+
         self.id = uri
         self.context = "image"
         self.profile = ServerProfile()
 
     def to_dict(self):
+        """a method to transform the instance into a dictionary 
+        """
         out = {}
         out["@id"] = self.id
         out["@context"] = self.context
@@ -593,13 +545,10 @@ class Service(Record):
         return out
 
 class ImageResource(Record):
-
     """a class to represent a IIIF Presentation ImageResource 
 
     Use this in your annotations that require it and swap them in and out of
     annotations as you see fit.
-
-    :rtype :class:`ImageResource`
     """
     __name__ = "ImageResource"
 
@@ -615,6 +564,8 @@ class ImageResource(Record):
         :param str identifier: the id of the image that you are requesting. 
          Ex. 'apf/2/apf2-00001.tif' or 'super-secret-identified-image'
         :param str mimetype: the mimetype of the image you are serving 
+
+        :rtype :class:`ImageResource`
         """
         url = ImageApiUrl(scheme, server_host, prefix, identifier)
         #url = ParseResult(scheme="https", netloc=server_host,
@@ -694,8 +645,6 @@ class ImageResource(Record):
 
 class Collection(Record):
     """a class for building IIIF Collection records
-
-    :rtype :class:`Collection`
     """
 
     __name__ = "Collection"
@@ -784,31 +733,65 @@ class Collection(Record):
 
 
 class Manifest(Record):
-
+    """a class for building IIIF Manifest records
+    """
     __name__ = "Manifest"    
 
     def __init__(self, uri):
+        """"initializes a Manifest with type sc:Manifest and id of uri given at init
+
+        :param str url: the  url for the manifest IIIF record
+
+        :rtype :class:`Manifest`
+        """
+
         self.context = "presentation"
         self.type = "sc:Manifest"
         self.id = uri
 
     def get_sequences(self):
+        """a method to get the value of the sequences property
+
+        It will return a list of the objects of type Sequence
+
+        :rtype list
+        """
         return self._iterate_some_list("_sequences")
 
     def set_sequences(self, x):
+        """a method to set the value of the sequences property. 
+        
+        Every instance in the list must be of type Sequence. If any item is not of type Sequence 
+        will raise a ValueError exception
+        """
         self._set_a_list_property(x, "_sequences", Sequence)
         pass
 
     def del_sequences(self):
-        self._delete_a_property("_structures")
+        """a method to set the value of sequences to None
+        """
+        self._delete_a_property("_sequences")
 
     def get_structures(self):
+        """a method to get the value of structures property
+
+        It will return a list of objects of type Structure
+
+        :rytpe list
+        """
         return self._iterate_some_list("_structures")
 
     def set_structures(self, x):
+        """a method to set the value of the structures property. 
+        
+        Every instance in the list is of type Range. If any item is not of type Range 
+        will raise a ValueError exception
+        """
         self._set_a_list_property(x, "_structures", Range)
 
     def del_structures(self):
+        """a method to set the value of structures property to None
+        """
         self._delete_a_property("_structures")
 
     sequences = property(get_sequences, set_sequences, del_sequences)
@@ -816,21 +799,40 @@ class Manifest(Record):
 
 
 class Sequence(Record):
-
+    """a class for building IIIF Sequence records
+    """
     __name__ = "Sequence"
 
     def __init__(self, uri):
+        """initializes an instance of class Sequence
+
+        :param str uri: a string representing a resolvable url 
+
+        :rtype :class:`Sequence`
+        """
         self.id = uri
         self.type = "sc:Sequence"
         self.canvases = []
 
     def get_canvases(self):
+        """a method to return the value of the canvases property
+
+        Returns a list of Canvas objects
+
+        :rtype list
+        """
         return self._iterate_some_list("_canvases")
 
     def set_canvases(self, x):
+        """a method to set the value of the canvases property
+
+        :param list x: a list of objects all of type Canvas
+        """
         self._set_a_list_property(x, "_canvases", Canvas)
 
     def del_canvases(self):
+        """a method to set the value of canvases property to None
+        """
         self._delete_a_property("_canvases")
 
     def del_canvas(self, a_canvas):
@@ -849,50 +851,103 @@ class Sequence(Record):
 
 
 class Canvas(Record):
-
+    """a class for building IIIF Canvas records
+    """
     __name__ = "Canvas"
 
     def __init__(self, uri):
+        """initializes an instance of class Canvas
+
+        :param str uri: a string representing a resolvable url 
+
+        :rtype :class:`Canvas`
+        """
         self.id = uri
         self.type = "sc:Canvas"
 
     def get_images(self):
+        """a method to return the value of the images property
+
+        Returns a list of ImageResource objects
+
+        :rtype list
+        """
         return self._iterate_some_list("_images")
 
     def set_images(self, x):
+        """a method to set the value of the canvases property
+
+        :param list x: a list of objects all of type Canvas
+        """
         self._set_a_list_property(x, "_images", Annotation)
 
     def del_images(self):
+        """a method to set the value of canvases property to None
+        """
         self._delete_a_property("_images")
 
     def get_otherContent(self):
+        """a method to return the value of the otherContent property
+
+        Returns a list of AnnotationList objects
+
+        :rtype list
+        """
         return self._iterate_some_list("_otherContent")
 
     def set_otherContent(self, x):
+        """a method to set the value of the otherContent property
+
+        :param list x: a list of objects all of type AnnotationList
+        """
         self._set_a_list_property(x, "_otherContent", AnnotationList)
 
     def del_otherContent(self):
+        """a method to set the value of otherContent property to None
+        """
         self._delete_a_property("_otherContent")
 
     def get_height(self):
+        """a method to get the value of the height property
+
+        :rtype int
+        """
         return self._get_simple_property("_height")
 
     def set_height(self, x):
+        """a method to set the value of the height property
+
+        :param int x
+        """
         self._set_numeric_property(x, "_height")
 
     def del_height(self):
+        """a method to set the value of the height property to None
+        """
         self._delete_a_property("_height")
 
     def get_width(self):
+        """a method to get the value of the width property
+
+        :rtype int
+        """
         return self._get_simple_property("_width")
 
     def set_width(self, x):
+        """a method to set the value of of the width property
+
+        :param int x
+        """
         self._set_numeric_property(x, "_width")
 
     def del_width(self):
+        """a method to set the value of the width property to None
+        """
         self._delete_a_property("_width")
 
     def validate(self):
+        """a method to validate the Canvas object as IIIF compliant
+        """
         if hasattr(self, 'height') and hasattr(self, 'width') and hasattr(self, 'label') and hasattr(self, 'images'):
             return True
         else:
