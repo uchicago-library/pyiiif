@@ -959,23 +959,48 @@ class Canvas(Record):
     otherContent = property(get_otherContent, set_otherContent, del_otherContent)
 
 class AnnotationList(Record):
+    """a class for building IIIF AnnotationList records
 
+    """
     __name__ = "AnnotationList"
 
     def __init__(self, uri):
+        """initializes an instance of AnnotationList
+
+        :param str url: a valid url meant to identify the AnnotationList
+
+        :rtype :class:`AnnotationList`
+        """
         self.id = uri
         self.type = "sc:AnnotationList"
 
     def get_resources(self):
+        """returns the value of the resources property
+
+        :rtype list
+        :returns a list of Annotation instances
+        """
         return self._iterate_some_list("_resources")
 
     def set_resources(self, x):
+        """sets the value of the resource property
+
+        :param list x: a list of Annotation instances
+        """
         return self._set_a_list_property(x, "_resources", Annotation)
 
     def del_resources(self):
+        """sets teh value of resources property to None if the property has been previously set
+        """
         self._delete_a_property("_resources")
 
     def to_dict(self):
+        """converts an instance to a dictionary
+
+        :rtype dict
+        :returns A dictionary data structure with key names conforming to IIIF specification 
+         containing all defined properties
+        """
         out = {}
         out["@id"] = self.id
         out["@type"] = self.type
@@ -983,7 +1008,7 @@ class AnnotationList(Record):
         if hasattr(self, "resources", None):
             for resource in self.resources:
                 n_item = resource.to_dict()
-                out["resources"].append(resource)
+                out["resources"].append(n_item)
         return out
 
     def __str__(self):
@@ -992,15 +1017,29 @@ class AnnotationList(Record):
     resources = property(get_resources, set_resources, del_resources)
 
 class Annotation(Record):
+    """a class for building IIIF Annotation records
 
+    """
     __name__ = "Annotation"
 
     def __init__(self, uri):
+        """initializes an instance of Annotation
+
+        :param str url: a valid url meant to identify the Annotation
+
+        :rtype :class:`Annotation`
+        """
         self.id = uri
         self.type = "oa:Annotation"
         self.motivation = "sc:Painting"
 
     def get_format(self):
+        """returns the value of the resources property
+
+        :rtype list
+        :returns a list of Annotation instances
+        """
+
         return self._get_simple_property("_format")
 
     def set_format(self, value):
@@ -1010,25 +1049,54 @@ class Annotation(Record):
         self._delete_a_property("_format") 
 
     def get_resource(self):
+        """returns the value of the resource property
+
+        :rtype :class:`ImageResource`
+        :returns an instance of ImageResource
+        """
         return self._get_simple_property("_resource")
 
     def set_resource(self, x):
+        """sets the value of the resource property
+
+        If the parameter 'x' is not an instance of ImageResource will raise a ValueError exception
+
+        :param ImageResource x: an intance of the ImageResource class
+        """
         if isinstance(x, ImageResource):
             self._resource = x
 
     def del_resource(self):
+        """sets a previously set value of the resource property to None
+        """
         self._delete_a_property("_resource")
 
     def get_motivation(self):
+        """returns the value of the motivation property
+
+        :rtype str
+        """
         return self._get_simple_property("_motivation")
 
     def set_motivation(self, x):
+        """sets the value of the motivation property
+
+        :param str x: a valid IIIF motivation for an Annotation
+        """
         self._set_simple_property(x, "_motivation")
 
     def del_motivation(self):
+        """sets the previously defined value of the motivation property to None
+        """
         self._delete_a_property("_motivation")
 
     def to_dict(self):
+        """converts an instance to a dictionary
+
+        :rtype dict
+        :returns A dictionary data structure with key names conforming to IIIF specification 
+         containing all defined properties
+        """
         out = {}
         out["@id"] = self.id
         out["@type"] = self.type
@@ -1043,45 +1111,100 @@ class Annotation(Record):
     motivation = property(get_motivation, set_motivation, del_motivation)
 
 class Range(Record):
+    """a class for building IIIF Annotation records
 
+    """
     __name__ = "Range"
 
     def __init__(self, uri):
+        """initializes an instance of Range
+
+        :param str url: a valid url meant to identify the AnnotationList
+
+        :rtype :class:`Annotation`
+        """
         self.id = uri
         self.type = "sc:Range"
         
     def get_canvases(self):
+        """returns the value of the canvases property
+
+        Returns a list of Canvas instances
+
+        :rtype list
+        """
         return self._iterate_some_list("_canvases")
 
     def set_canvases(self, x):
+        """sets the value of the canvases property
+
+        If x contains any instance that is not of the Canvas class will raise a ValueError exception
+
+        :param x list: a list of Canvas instances
+        """
         return self._set_a_list_property(x, "_canvases", Canvas)
 
     def del_canvases(self):
+        """sets previously defined canvases property to None
+        """
         self._delete_a_property("_canvases")
 
     def get_members(self):
+        """returns the value of the members property
+
+        Returns a list of either Canvas or Range instances
+
+        :rtype list
+        """
         return self._iterate_some_list("_members")
 
     def set_members(self, x):
+        """sets the value of the canvases property
+
+        If x contains any instance that is not of the Canvas class will raise a ValueError exception
+
+        :param x list: a list of Canvas instances
+        """
+ 
         return self._set_a_list_property(x, "_members", [Canvas, Range])
 
     def del_members(self):
+        """sets previously defined members property to None
+        """
+ 
         self._delete_a_property("_members")
 
     def get_ranges(self):
+        """returns the value of the ranges property
+
+        Returns a list of Range instances
+
+        :rtype list
+        """
         return self._iterate_some_list("_ranges")
 
     def set_ranges(self, x):
+        """sets the value of the ranges property
+
+        If x contains any instance that is not of the Range class will raise a ValueError exception
+
+        :param x list: a list of Range instances
+        """
+ 
         return self._set_a_list_property(x, "_ranges", Range)
 
     def del_ranges(self):
+        """sets previously defined members property to None
+        """
+ 
         self._delete_a_property("_ranges")
 
     canvases = property(get_canvases, set_canvases, del_canvases)
     members = property(get_members, set_members, del_members)
     ranges = property(get_ranges, set_ranges, del_ranges)
 
-# JSON-LD @types to Class
+# JSON-LD @types to Class; used for converting the string value in 
+# @type loading JSON strings into the right object instances
 ttc = {
     "sc:Collection": Collection,
     "sc:Manifest": Manifest,
