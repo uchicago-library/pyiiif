@@ -60,13 +60,12 @@ str(manifest)
 If all you care about is getting a nicely structured IIIF image api url without having to remember where to put all those forward slashes and how to percent-encoded characters in the identifier string, then you use the ImageApiUrl object
 
 ```python
-$ from pyiiif.image_api.twodotone import ImageApiUrl
-$ i = ImageApiUrl("https", "iiiif-server.lib.uchicago.edu", "", "default-photo.original.jpg")
-$ i.to_image_url()
+from pyiiif.image_api.twodotone import ImageApiUrl
+i = ImageApiUrl("https", "iiiif-server.lib.uchicago.edu", "", "default-photo.original.jpg")
+i.to_image_url()
 'https://iiif-server.lib.uchicago.edu/default-photo.original.jpg/full/full/0/default.jpg'
-$ i.to_info_url()
+i.to_info_url()
 'https://iiif-server.lib.uchicago.edu/default-photo.original.jpg/info.json'
-$
 ```
 
 ## Quickstart
