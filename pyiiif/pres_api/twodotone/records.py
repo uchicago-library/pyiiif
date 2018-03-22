@@ -7,9 +7,10 @@ import requests
 from json.decoder import JSONDecodeError
 from urllib.parse import urlparse, ParseResult
 
-from pyiiif.utils import escape_identifier
+from pyiiif.utils import escape_identifier, convert_context_url_into_lookup
 from pyiiif.constants import valid_contexts, valid_viewingDirections, valid_viewingHints, valid_types
 from pyiiif.image_api.twodotone import ImageApiUrl
+
 
 # TODO define Annotation, ImageContent and OtherContent class methods
 
@@ -375,56 +376,6 @@ class Record:
             if value == pot_context:
                 return key
 
-    def traverse_looking_for_lists(self, a_dict, depth=0, breadcrumb="", parent=None):
-        print("hello from traverse_looking_for_lists()")
-        print(a_dict.get("@type"))
-        for key, value in a_dict.items():
-            if isinstance(value, list):
-                print("found a list at {}".format(key))
-                if key == 'sequences':
-                    self.sequences = []
-                temp_list = []
-                for n_thing in value:
-                    if isinstance(n_thing, dict):
-                        print("hello from conditional in for-loop of list type-check conditional")
-                        new_thing = ttc[n_thing.get("@type")](n_thing.get("@id"))
-                        temp_list.append(new_thing) 
-                        depth += 1
-                        breadcrumb += key + ">>"
-                        parent = new_thing
-                        self.traverse_looking_for_lists(n_thing, depth=depth,
-                                                        breadcrumb=breadcrumb, parent=parent)
-            elif a_dict.get("@type") == "dctypes:Image":
-                print(a_dict)
-        self.traverse_looking_for_lists(a_dict, depth=depth,
-                                        breadcrumb=breadcrumb, parent=parent)
-        print(type(parent))
-        print(depth)
-        print(breadcrumb)
-
-    def load(self, json_data, out={}):
-        """load data from a json record
-
-        First checks if the value of json_data can be converted to JSON. If not: raises ValueError exception
-       
-        Second it checks if converted json_data string converts to a dict which it should if it is a single IIIF record.
-        If not: raises a ValueError exception
-
-        Finally, so long as both checks pass, it    
-        takes a stringified JSON record and loads it into an instance of Record
-
-        :param json_data a string that can be loaded into a python dictionary
-        """
-        try:
-            json_data = json.loads(json_data)
-        except JSONDecodeError:
-            raise ValueError("The string you entered cannot be converted to JSON")
-        if isinstance(json_data, dict):
-           print("hello from instance typecheck in load()")
-           self.traverse_looking_for_lists(json_data)
-        else: 
-            raise ValueError("Require a single JSON record")
-
     def validate(self):
         """validate this record
 
@@ -640,6 +591,27 @@ class ImageResource(Record):
         out["service"] =  self.service.to_dict()
         return out
 
+    @classmethod
+    def load(cls, json_data):
+        """a method to  instantiate an instance from a JSON string
+
+        :param string json_data: a string of valid JSON data containing information about a IIIF Resource
+
+        :rtype :class:`ImageResource`
+        """
+        try:
+            data = json.loads(json_data)
+        except JSONDecodeError:
+            raise ValueError("invalid JSON was passed to ImageResource.load()")
+        identifier = data.get("@id")
+        image_url = ImageApiUrl.from_image_url(identifier)
+        print(image_url)
+        i = cls(image_url.scheme, image_url.server, image_url.prefix, image_url.identifier, data.get("format"))
+        i.format = data.get("format")
+        i.type = data.get("@type")
+        i.service = data.get("service")
+        return i
+
     service = property(get_service, set_service, del_service)
     format = property(get_format, set_format, del_format)
 
@@ -727,6 +699,54 @@ class Collection(Record):
         else:
             raise ValueError("members hasn't been set on this instance")
 
+    @classmethod
+    def load(cls, json_data):
+        """a class method to instantiate an instance of Collection class from a json string
+
+        :rtype :class:`Collection`
+        """
+        try:
+            data = json.dumps(json_data)
+        except JSONDecodeError:
+            raise ValueError("Sequence.load() was passed invalid JSON data")
+        new_collection = cls(data.get("@id"))
+        if data.get("members"):
+            members_list = []
+            for member in data.get("members"):
+                the_type = member.get("@type")
+                if the_type == "sc:Manifest":
+                    new_member = Manifest.load(member)
+                elif the_type == "sc:Collection":
+                    new_member = Collection.load(member)
+                else:
+                    raise ValueError("Manifest was passed invalid IIIF members list")
+                new_member.type = the_type
+                members_list.append(new_member)
+            new_collection.members = members_list
+        if data.get("collections"):
+            collections = []
+            for collection in data.get("collections"):
+                the_type = member.get("@type")
+                if the_type == "sc:Collection":
+                    new_member = Collection.load(collection)
+                else:
+                    raise ValueError("Manifest was passed invalid IIIF members list")
+                new_member.type = the_type
+                collections.append(new_member)
+            new_collection.collections = collections
+        if data.get("manifests"):
+            manifests = []
+            for manifest in data.get("manifests"):
+                the_type = member.get("@type")
+                if the_type == "sc:Manifest":
+                    new_member = Manifest.load(manifest)
+                else:
+                    raise ValueError("Manifest was passed invalid IIIF members list")
+                new_member.type = the_type
+                manifest.append(new_member)
+            new_collection.manifests = manifests
+        return new_collection
+
     collections = property(get_collections, set_collections, del_collections)
     manifests = property(get_manifests, set_manifests, del_manifests)
     members = property(get_members, set_members, del_members)
@@ -794,6 +814,25 @@ class Manifest(Record):
         """
         self._delete_a_property("_structures")
 
+    @classmethod
+    def load(cls, json_data):
+        """a class method to instantiate an instance of Manifest class from a json string
+
+        :rtype :class:`Manifest`
+        """
+        try:
+            data = json.dumps(json_data)
+        except JSONDecodeError:
+            raise ValueError("Sequence.load() was passed invalid JSON data")
+        new_manifest = cls(data.get("@id"))
+        if data.get("canvases"):
+            sequence_list = []
+            for sequence in data.get("canvases"):
+                new_sequence = Sequence.load(sequence)
+                sequence.append(new_sequence)
+            new_manifest.sequences = sequence_list
+        return new_manifest
+
     sequences = property(get_sequences, set_sequences, del_sequences)
     structures = property(get_structures, set_structures, del_structures)
 
@@ -846,6 +885,25 @@ class Sequence(Record):
             pos_to_remove = the_list.index(a_canvas)
             del the_list[pos_to_remove]
             self._set_a_list_property(the_list, "_canvases", Canvas)
+
+    @classmethod
+    def load(cls, json_data):
+        """a class method to instantiate an instance of Sequence class from a json string
+
+        :rtype :class:`Sequence`
+        """
+        try:
+            data = json.dumps(json_data)
+        except JSONDecodeError:
+            raise ValueError("Sequence.load() was passed invalid JSON data")
+        new_sequence = Sequence(data.get("@id"))
+        if data.get("canvases"):
+            canvas_list = []
+            for canvas in data.get("canvases"):
+                new_canvas = Canvas.load(canvas)
+                canvas_list.append(new_canvas)
+            new_sequence.canvases = canvas_list
+        return new_sequence
 
     canvases = property(get_canvases, set_canvases, del_canvases)
 
@@ -952,6 +1010,27 @@ class Canvas(Record):
             return True
         else:
             return False
+
+    @classmethod
+    def load(cls, json_data):
+        """a class method to instantiate an instance of Canvas class from a json string
+
+        :rtype :class:`Canvas`
+        """
+        try:
+            data = json.loads(json_data)
+        except JSONDecodeError:
+            raise ValueError("Canvas.load was passed invalid json data")
+        img_res_list = []
+        new_canvas = cls(data.get("@id"))
+        new_canvas.height = data.get("height")
+        new_canvas.width = data.get("width")
+        if data.get("images"):
+            for n in data.get("images"):
+                an_img = ImageResource.load(n)
+                img_res_list.append(an_img)
+            new_canvas.images = img_res_list
+        return new_canvas
 
     images = property(get_images, set_images, del_images)
     height = property(get_height, set_height, del_height)

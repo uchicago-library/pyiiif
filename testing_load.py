@@ -1,5 +1,5 @@
 
-from pyiiif.pres_api.twodotone.records import Collection, Record
+from pyiiif.pres_api.twodotone.records import Collection, Record, ImageResource
 import json
 
 out = {}
@@ -32,16 +32,14 @@ an_annotation["resource"] = {}
 img_resource = {}
 img_resource["@id"] = "http://iiif-server.lib.uchicago.edu/default-photo.original.jpg/full/full/0/default.jpg"
 img_resource["service"] = {"@id": "http://iiif-server.lib.uchicago.edu/default-photo.original.jpg", "@context": "https://iiif.io/image/2/level2.json"}
-
+img_resource["@type"] = "dctypes:Image"
 an_annotation["resource"] = img_resource
 a_canvas["images"] = [an_annotation]
 a_seq["canvases"] = [a_canvas]
 out["sequences"] = [a_seq]
 
-d = json.dumps(out)
+#d = json.dumps(out)
 
-r = Record()
-r.load(d)
-
-print(vars(r))
-print("done")
+json_string = json.dumps(img_resource)
+i = ImageResource.load(json_string)
+#print(i.id)
