@@ -1,4 +1,4 @@
-"""Classes for building twodotone IIIF Presentation records
+"""Classes for building twodotone IIIF Presentation records:
 """
 
 from os.path import join
@@ -101,7 +101,6 @@ class Record:
         :param str list_item_class: in situations where the items in a list can be more than one 
          class instances a list and in the eventuality that contained items can only be one class 
          instance a single class name
-
         """
         if isinstance(x, list):
             tally = 0
@@ -710,6 +709,15 @@ class Collection(Record):
         except JSONDecodeError:
             raise ValueError("Sequence.load() was passed invalid JSON data")
         new_collection = cls(data.get("@id"))
+        if data.get("description"):
+            new_collection.description = data.get("description")
+        if data.get("label"):
+            new_collection.label = data.get("label")
+        if data.get("viewingDirection"):
+            new_collection.viewingDirection = data.get("viewingDirection")
+        if data.get("viewingHint"):
+            new_collection.viewingHint = data.get("viewingHint")
+ 
         if data.get("members"):
             members_list = []
             for member in data.get("members"):
@@ -825,6 +833,14 @@ class Manifest(Record):
         except JSONDecodeError:
             raise ValueError("Sequence.load() was passed invalid JSON data")
         new_manifest = cls(data.get("@id"))
+        if data.get("description"):
+            new_manifest.description = data.get("description")
+        if data.get("label"):
+            new_manifest.label = data.get("label")
+        if data.get("viewingDirection"):
+            new_manifest.viewingDirection = data.get("viewingDirection")
+        if data.get("viewingHint"):
+            new_manifest.viewingHint = data.get("viewingHint")
         if data.get("sequences"):
             sequence_list = []
             for sequence in data.get("sequences"):
@@ -834,7 +850,7 @@ class Manifest(Record):
         if data.get("structures"):
             structures_list = []
             for structure in data.get("structures"):
-                new_structure = Structure.load(json.dumps(sequence))
+                new_structure = Range.load(json.dumps(structure))
                 structures_list.append(new_structure)
             new_manifest.structures = structures_list
         return new_manifest
@@ -903,6 +919,16 @@ class Sequence(Record):
         except JSONDecodeError:
             raise ValueError("Sequence.load() was passed invalid JSON data")
         new_sequence = Sequence(data.get("@id"))
+        if data.get("description"):
+            new_sequence.description = data.get("description")
+        if data.get("label"):
+            new_sequence.label = data.get("label")
+        if data.get("startCanvas"):
+            new_sequence.startCanvas = data.get("startCanvas")
+        if data.get("viewingDirection"):
+            new_sequence.viewingDirection = data.get("viewingDirection")
+        if data.get("viewingHint"):
+            new_sequence.viewingHint = data.get("viewingHint")
         if data.get("canvases"):
             canvas_list = []
             for canvas in data.get("canvases"):
@@ -1029,6 +1055,9 @@ class Canvas(Record):
             raise ValueError("Canvas.load was passed invalid json data")
         img_list = []
         new_canvas = cls(data.get("@id"))
+        if data.get("description"):
+            new_canvas.description = data.get("description")
+        new_canvas.label = data.get("label")
         new_canvas.height = data.get("height")
         new_canvas.width = data.get("width")
         if data.get("images"):
@@ -1112,6 +1141,14 @@ class AnnotationList(Record):
         except JSONDecodeError:
             raise ValueError("bad JSON passed to AnnotationList.load()")
         new_annotation_list = cls(data.get("@id"))
+        if data.get("description"):
+            new_annotation_list.description = data.get("description")
+        if data.get("label"):
+            new_annotation_list.label = data.get("label")
+        if data.get("viewingDirection"):
+            new_annotation_list.viewingDirection = data.get("viewingDirection")
+        if data.get("viewingHint"):
+            new_annotation_list.viewingHint = data.get("viewingHint")
         if data.get("resources"):
             new_resource_list = []
             for resource in data.get("resources"):
@@ -1219,6 +1256,14 @@ class Annotation(Record):
         except JSONDecodeError:
             raise ValueError("bad JSON passed to Annotation.load()")
         new_annotation = cls(data.get("@id"))
+        if data.get("description"):
+            new_annotation.description = data.get("description")
+        if data.get("label"):
+            new_annotation.label = data.get("label")
+        if data.get("viewingDirection"):
+            new_annotation.viewingDirection = data.get("viewingDirection")
+        if data.get("viewingHint"):
+            new_annotation.viewingHint = data.get("viewingHint")
         if data.get("format"):
             new_annotation.format = data.get("format")
         if data.get("motivation"):
@@ -1331,6 +1376,14 @@ class Range(Record):
         except JSONDecodeError:
             raise ValueError("bad JSON passed to Range.load()")
         new_range = cls(data.get("@id"))
+        if data.get("description"):
+            new_range.description = data.get("description")
+        if data.get("label"):
+            new_range.label = data.get("label")
+        if data.get("viewingDirection"):
+            new_range.viewingDirection = data.get("viewingDirection")
+        if data.get("viewingHint"):
+            new_range.viewingHint = data.get("viewingHint")
         if data.get("canvases"):
             new_canvases = []
             for canvas in data.get("canvases"):
@@ -1358,6 +1411,44 @@ class Range(Record):
     canvases = property(get_canvases, set_canvases, del_canvases)
     members = property(get_members, set_members, del_members)
     ranges = property(get_ranges, set_ranges, del_ranges)
+
+class OtherContent(object):
+
+    __name__ = "OtherContent"
+
+    def __init__(self, x):
+        self.items = x
+
+    def set_items(self, x):
+        for n_url in x:
+            u = requests.get(x, "HEAD")
+            if u.status_code() == 200:
+                pass
+            else:
+                raise ValueError("{} is not a valid url for otherContent".format(n_url))
+        self._items = x    
+
+    def get_items(self):
+        out = []
+        for n_item in self.items:
+            out.append(n_item)
+        return out
+
+    def to_dict(self):
+        return self.items
+
+    @classmethod
+    def load(cls, json_data):
+        try:
+            data = json.load(json_data)
+        except JSONDecodeError:
+            raise ValueError("OtherContent.load got invalid JSON data")
+        return cls(data)
+
+    def del_items(self):
+        self._items = None
+
+    items = property(get_items, set_items, del_items)
 
 # JSON-LD @types to Class; used for converting the string value in 
 # @type loading JSON strings into the right object instances
