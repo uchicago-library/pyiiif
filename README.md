@@ -97,5 +97,5 @@ This will:
 - [IIIF Presentation APIs](http://iiif.io/api/presentation/2.1/)
 
 # Authors
-verbalhanglider <tdanstrom@uchicago.edu>
-Brian Balsamo <brian@brianbalsamo.com>
+- verbalhanglider <tdanstrom@uchicago.edu>
+- Brian Balsamo <brian@brianbalsamo.com>
