@@ -67,8 +67,7 @@ class Tests(unittest.TestCase):
 
     def testLoadFromString(self):
         input_string = '{"@type": "sc:Manifest", "label": "Test", "description": "A test", "@id": "https://www.lib.uchicago.edu/", "viewingHint": "individuals", "viewingDirection": "left-to-right", "@context": "https://iiif.io/api/presentation/2/context.json"}'
-        x = Record()
-        x.load(input_string)
+        x = Manifest.load(input_string)
         return self.assertEquals(x.type, "sc:Manifest") and \
                self.assertEquals(x.id, "http://www2.lib.uchicago.edu/") and \
                self.assertEquals(x.context, "https://iiif.io/api/presentation/2/context.json") and \

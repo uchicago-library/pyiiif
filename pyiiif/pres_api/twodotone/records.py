@@ -1322,9 +1322,39 @@ class Range(Record):
     def del_ranges(self):
         """sets previously defined members property to None
         """
- 
         self._delete_a_property("_ranges")
 
+    @classmethod
+    def load(cls, json_data):
+        try:
+            data = json.dumps(json_data)
+        except JSONDecodeError:
+            raise ValueError("bad JSON passed to Range.load()")
+        new_range = cls(data.get("@id"))
+        if data.get("canvases"):
+            new_canvases = []
+            for canvas in data.get("canvases"):
+                new_canvas = Canvas.load(json.dumps(canvas))
+                new_canvases.append(new_canvas)
+            new_range.canvases = new_canvases
+        if data.get("members"):
+            new_members = []
+            for member in data.get("members"):
+                if member.get("@type") == "sc:Range":
+                    new_member = Range.load(json.dumps(canvas))
+                elif member.get("@type") == "sc:Canvas":
+                    new_member = Canvas.load(json.dumps(canvas))
+                else:
+                    raise ValueError("A member in imported JSON members property has invalid @type")
+                new_members.append(new_member)
+            new_range.member = new_members
+        if data.get("ranges"):
+            new_ranges = []
+            for a_range in data.get("ranges"):
+                new_range = Canvas.load(json.dumps(a_range))
+                new_ranges.append(new_range)
+            new_range.member = new_ranges
+ 
     canvases = property(get_canvases, set_canvases, del_canvases)
     members = property(get_members, set_members, del_members)
     ranges = property(get_ranges, set_ranges, del_ranges)
