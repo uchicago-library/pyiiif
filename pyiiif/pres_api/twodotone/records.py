@@ -1292,7 +1292,7 @@ class Range(Record):
 
         :param str url: a valid url meant to identify the AnnotationList
 
-        :rtype :class:`Annotation`
+        :rtype :class:`Range`
         """
         self.id = uri
         self.type = "sc:Range"
@@ -1413,13 +1413,27 @@ class Range(Record):
     ranges = property(get_ranges, set_ranges, del_ranges)
 
 class OtherContent(object):
-
+    """a class for building IIIF otherContent
+    """
     __name__ = "OtherContent"
 
     def __init__(self, x):
+        """initializes an instance of OtherContent
+
+        :param str x: a list of valid urls
+
+        :rtype :class:`OtherContent`
+        """
         self.items = x
 
     def set_items(self, x):
+        """sets the value of the items property 
+
+        Each list item must be a resolvable URL
+
+        :param str x: a list of urls
+
+        """
         for n_url in x:
             u = requests.get(x, "HEAD")
             if u.status_code() == 200:
@@ -1429,13 +1443,22 @@ class OtherContent(object):
         self._items = x    
 
     def get_items(self):
+        """returns the value of the items property
+
+        :rtype list
+        """
         out = []
         for n_item in self.items:
             out.append(n_item)
         return out
 
+    def del_items(self):
+        """sets the previously set items property to None
+        """
+        self._items = None
+
     def to_dict(self):
-        return self.items
+        return {"otherContent": self.items}
 
     @classmethod
     def load(cls, json_data):
@@ -1444,9 +1467,6 @@ class OtherContent(object):
         except JSONDecodeError:
             raise ValueError("OtherContent.load got invalid JSON data")
         return cls(data)
-
-    def del_items(self):
-        self._items = None
 
     items = property(get_items, set_items, del_items)
 
