@@ -14,6 +14,60 @@ from pyiiif.image_api.twodotone import ImageApiUrl
 
 # TODO define Annotation, ImageContent and OtherContent class methods
 
+class MetadataField:
+    """a class for holding metadata field:value information
+
+    """
+    __name__ = "MetadataField"
+
+    def __init__(self, label, value):
+        """initializes an instance of MetadataField
+
+        :param str label: the name of the metadata field to be displayed to end users
+        :param str value: the value of the metadata field
+
+        :rtype :class:`MetadataField`
+        """
+        self.label = label
+        self.value = value
+
+    def __repr__(self):
+        return "MetadataField " + self.label + ":" + self.value
+
+    def __str__(self):
+        return self.label + ":" + self.value
+
+    def get_label(self):
+        if getattr(self, "_label", None):
+            return getattr(self, "_label")
+
+    def set_label(self, x):
+        setattr(self, "_label", x)
+
+    def del_label(self):
+        if not getattr(self, "_label", None):
+            setattr(self, "_label", None)        
+
+    def get_value(self):
+         if getattr(self, "_label", None):
+                return getattr(self, "_label")
+       
+    def set_value(self, x):
+         setattr(self, "_label", x)       
+
+    def del_value(self):
+        if not getattr(self, "_label", None):
+            setattr(self, "_label", None)        
+
+    def to_dict(self):
+        out = {}
+        out["field"] = self.label
+        out["value"] = self.value
+        return out
+
+    label = property(get_label, set_label, del_label)
+    value = property(get_value, set_value, del_value)
+    
 class Record:
     """
     A generic record class for IIIF Presentation records. This should not be called
@@ -419,6 +473,69 @@ class Record:
                     out[n_property[1:]] = getattr(self, n_property, None)
         return out
 
+    def get_logo(self):
+        pass 
+    
+    def set_logo(self, x):
+        pass 
+    
+    def del_logo(self):
+        pass 
+    
+    def get_attribution(self):
+        return self._get_simple_property("_attribution")        
+    
+    def set_attribution(self, x):
+        self._set_simple_property("_attribution", x)
+    
+    def del_attribution(self):
+        self._delete_a_property("_attribution")
+
+    def get_license(self):
+        return self._get_simple_property("_license")
+
+    def set_license(self, x):
+        if requests.get(x, "HEAD").status_code != 200:
+            raise ValueError("license property must be set with a real URL")
+        self._license = x
+    
+    def del_license(self):
+        self._delete_a_property("_license")        
+
+    def set_thumbnail(self, x):
+        pass 
+
+    def get_thumbnail(self):
+        pass
+
+    def del_thumbnail(self):
+        pass
+
+    def get_metadata(self):
+        out = []
+        if getattr(self, "_metadata", None):
+            for n_field in self.metadata:
+                out.append((n_field.label, n_field.value))
+        return out
+
+    def _add_a_metadata_element(self, label, value):
+        if getattr(self, "_metadata", None):
+            for field in self.metadata:
+                if field.label == label:
+                    raise ValueError("Cannot add two metadata fields with the same field name")
+            copy = getattr(self, "_metadata")
+            copy.append(MetadataField(label, value)) 
+            self.metadata = copy
+
+    def set_metadata(self, x):
+        for n_thing in x:
+            if not isinstance(n_thing, MetadataField):
+                raise ValueError("metadata property must be set only with instances of MetadataField")
+        setattr(self, "_metadata", x)
+
+    def del_metadata(self):
+         self._delete_a_property("_license")           
+
     type = property(get_type, set_type, del_type)
     id = property(get_id, set_id, del_id)
     context = property(get_context, set_context, del_context)
@@ -426,6 +543,29 @@ class Record:
     viewingDirection = property(get_viewingDirection, set_viewingDirection, del_viewingDirection)
     label = property(get_label, set_label, del_label)
     description = property(get_description, set_description, del_description)
+    attribution = property(get_attribution, set_attribution, del_attribution)
+    license = property(get_logo, set_logo, del_logo)
+    logo = property(get_logo, set_logo, del_logo)
+    thumbnail = property(get_thumbnail, set_thumbnail, del_thumbnail)
+    metadata = property(get_metadata, set_metadata, del_metadata)
+
+class Thumbnail(Record):
+    def __init__(self, url, isIIIF=False):
+        if isIIIF:
+            self.id = ImageApiUrl.from_image_url(url)
+            self.type = "dctypes:Image"
+            self.service = Service(self.id.to_info_url)
+    
+    def __repr__(self):
+        return "Thumbnail " + self.id
+
+    def __str__(self):
+        return self.id
+
+    def toDict(self):
+        out = {}
+        out["@id"] = self.id
+        out
 
 class ServerProfile(object):
     """a class for building IIIF Collection ServerProfile information on an Service instance
