@@ -603,9 +603,9 @@ class ImageResource(Record):
             data = json.loads(json_data)
         except JSONDecodeError:
             raise ValueError("invalid JSON was passed to ImageResource.load()")
+        print(data)
         identifier = data.get("@id")
         image_url = ImageApiUrl.from_image_url(identifier)
-        print(image_url)
         i = cls(image_url.scheme, image_url.server, image_url.prefix, image_url.identifier, data.get("format"))
         i.format = data.get("format")
         i.type = data.get("@type")
@@ -821,16 +821,22 @@ class Manifest(Record):
         :rtype :class:`Manifest`
         """
         try:
-            data = json.dumps(json_data)
+            data = json.loads(json_data)
         except JSONDecodeError:
             raise ValueError("Sequence.load() was passed invalid JSON data")
         new_manifest = cls(data.get("@id"))
-        if data.get("canvases"):
+        if data.get("sequences"):
             sequence_list = []
-            for sequence in data.get("canvases"):
-                new_sequence = Sequence.load(sequence)
-                sequence.append(new_sequence)
+            for sequence in data.get("sequences"):
+                new_sequence = Sequence.load(json.dumps(sequence))
+                sequence_list.append(new_sequence)
             new_manifest.sequences = sequence_list
+        if data.get("structures"):
+            structures_list = []
+            for structure in data.get("structures"):
+                new_structure = Structure.load(json.dumps(sequence))
+                structures_list.append(new_structure)
+            new_manifest.structures = structures_list
         return new_manifest
 
     sequences = property(get_sequences, set_sequences, del_sequences)
@@ -893,14 +899,14 @@ class Sequence(Record):
         :rtype :class:`Sequence`
         """
         try:
-            data = json.dumps(json_data)
+            data = json.loads(json_data)
         except JSONDecodeError:
             raise ValueError("Sequence.load() was passed invalid JSON data")
         new_sequence = Sequence(data.get("@id"))
         if data.get("canvases"):
             canvas_list = []
             for canvas in data.get("canvases"):
-                new_canvas = Canvas.load(canvas)
+                new_canvas = Canvas.load(json.dumps(canvas))
                 canvas_list.append(new_canvas)
             new_sequence.canvases = canvas_list
         return new_sequence
@@ -1021,15 +1027,21 @@ class Canvas(Record):
             data = json.loads(json_data)
         except JSONDecodeError:
             raise ValueError("Canvas.load was passed invalid json data")
-        img_res_list = []
+        img_list = []
         new_canvas = cls(data.get("@id"))
         new_canvas.height = data.get("height")
         new_canvas.width = data.get("width")
         if data.get("images"):
             for n in data.get("images"):
-                an_img = ImageResource.load(n)
-                img_res_list.append(an_img)
-            new_canvas.images = img_res_list
+                an_annotation = Annotation.load(json.dumps(n))
+                img_list.append(an_annotation)
+            new_canvas.images = img_list
+        if data.get("otherContent"):
+            otherContent = [] 
+            for oContent in data.get("otherContent"):
+                new_oContent = OtherContent.load(json.dumps(oContent))
+                otherContent.append(new_oContent)
+            new_canvas.otherContent = otherContent
         return new_canvas
 
     images = property(get_images, set_images, del_images)
@@ -1092,6 +1104,21 @@ class AnnotationList(Record):
 
     def __str__(self):
         return str(self.to_dict())
+
+    @classmethod
+    def load(cls, json_data):
+        try:
+            data = json.loads(json_data)
+        except JSONDecodeError:
+            raise ValueError("bad JSON passed to AnnotationList.load()")
+        new_annotation_list = cls(data.get("@id"))
+        if data.get("resources"):
+            new_resource_list = []
+            for resource in data.get("resources"):
+                new_anno = Annotation.load(json.dumps(resource))
+                new_resource_list.append(new_anno)
+            new_annotation_list.resources = new_resource_list
+        return new_annotation_list
 
     resources = property(get_resources, set_resources, del_resources)
 
@@ -1184,6 +1211,26 @@ class Annotation(Record):
             print("hello from check for resource prop")
             out["resource"] = self.resource.to_dict()
         return out
+
+    @classmethod
+    def load(cls, json_data):
+        try:
+            data = json.loads(json_data)
+        except JSONDecodeError:
+            raise ValueError("bad JSON passed to Annotation.load()")
+        new_annotation = cls(data.get("@id"))
+        if data.get("format"):
+            new_annotation.format = data.get("format")
+        if data.get("motivation"):
+            new_annotation.motivation = data.get("motivation")
+        if data.get("resource"):
+            img_url = data.get("resource").get("@id")
+            img_api_url = ImageApiUrl.from_image_url(img_url)
+            new_img_resource = ImageResource(img_api_url.scheme, img_api_url.server,
+                                             img_api_url.prefix, img_api_url.identifier,
+                                             data.get("resource").get("format"))
+            new_annotation.resource = new_img_resource
+        return new_annotation
 
     format = property(get_format, set_format, del_format)
     resource = property(get_resource, set_resource, del_resource)

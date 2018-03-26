@@ -1,5 +1,5 @@
 
-from pyiiif.pres_api.twodotone.records import Collection, Record, ImageResource
+from pyiiif.pres_api.twodotone.records import Collection, Record, ImageResource, Canvas, Sequence, Manifest
 import json
 
 out = {}
@@ -38,8 +38,27 @@ a_canvas["images"] = [an_annotation]
 a_seq["canvases"] = [a_canvas]
 out["sequences"] = [a_seq]
 
-#d = json.dumps(out)
+# testing loading image resource
+imgresource_string = json.dumps(img_resource)
+i = ImageResource.load(imgresource_string)
 
-json_string = json.dumps(img_resource)
-i = ImageResource.load(json_string)
-#print(i.id)
+# testing loading canvas
+canvas_string = json.dumps(a_canvas)
+c = Canvas.load(canvas_string)
+print(c)
+
+# testing loading sequence
+sequence_string = json.dumps(a_seq)
+s = Sequence.load(sequence_string)
+print(s)
+
+# testing loading manifest
+manifest_string = json.dumps(out)
+m = Manifest.load(manifest_string)
+print(m.sequences)
+for s in m.sequences:
+    print(s.canvases)
+    for canvas in s.canvases:
+        print(canvas.images)
+        for anno in canvas.images:
+            print(anno.resource)
