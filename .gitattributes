@@ -1,0 +1,10 @@
+# set the default text line-ending behavior
+text eol=lf
+
+# these files should be normalized
+*.css   text
+*.xml   text
+*.yml   text
+*.html  text
+*.py    text
+*.json  text
