@@ -555,6 +555,8 @@ class Thumbnail(Record):
             self.id = ImageApiUrl.from_image_url(url)
             self.type = "dctypes:Image"
             self.service = Service(self.id.to_info_url)
+        else:
+            self.id = url
     
     def __repr__(self):
         return "Thumbnail " + self.id
