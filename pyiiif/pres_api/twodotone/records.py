@@ -196,6 +196,19 @@ class Record:
         else:
             return False
 
+    def set_metadata(self, a_list):
+        for n_item in a_list:
+            if not isinstance(n_item, MetadataField):
+                raise ValueError("metadata property can ony contain instances of MetadataField")
+        self._metadata = a_list
+
+    def get_metadata(self):
+        return self._metadata
+
+    def del_metadata(self):
+        if hasattr(self, "_metadata"):
+            self._metadata = None
+
     def get_type(self):
         """returns the type property value for an instance
         """
@@ -602,7 +615,6 @@ class ImageResource(Record):
             data = json.loads(json_data)
         except JSONDecodeError:
             raise ValueError("invalid JSON was passed to ImageResource.load()")
-        print(data)
         identifier = data.get("@id")
         image_url = ImageApiUrl.from_image_url(identifier)
         i = cls(image_url.scheme, image_url.server, image_url.prefix, image_url.identifier, data.get("format"))
@@ -717,7 +729,13 @@ class Collection(Record):
             new_collection.viewingDirection = data.get("viewingDirection")
         if data.get("viewingHint"):
             new_collection.viewingHint = data.get("viewingHint")
- 
+
+        if data.get("metadata"):
+            mdata_list = []
+            for a_field in data.get("metadata"):
+                new_field = MetadataField(a_field.get("label"), a_field.get("value"))
+                mdata_list.append(new_field)
+            new_collection.metadata = mdata_list 
         if data.get("members"):
             members_list = []
             for member in data.get("members"):
@@ -828,11 +846,21 @@ class Manifest(Record):
 
         :rtype :class:`Manifest`
         """
+        print(type(json_data))
         try:
             data = json.loads(json_data)
         except JSONDecodeError:
             raise ValueError("Sequence.load() was passed invalid JSON data")
         new_manifest = cls(data.get("@id"))
+        print("hi")
+        if data.get("metadata"):
+            print("hi from check for metadata")
+            mdata_list = []
+            for a_field in data.get("metadata"):
+                new_field = MetadataField(a_field.get("label"), a_field.get("value"))
+                mdata_list.append(new_field)
+            new_manifest.metadata = mdata_list 
+ 
         if data.get("description"):
             new_manifest.description = data.get("description")
         if data.get("label"):
@@ -1469,6 +1497,56 @@ class OtherContent(object):
         return cls(data)
 
     items = property(get_items, set_items, del_items)
+
+class MetadataField:
+    """a class for building IIIF MetadataField
+    """
+    __name__ = "MetadataField"
+
+    def __init__(self, label, value):
+        """initializes an instance of MetadataField
+
+        :param str label: a human-readable string describing what a particular metadata field represents
+        :param str value: a value for a particular metadata field
+
+        :rtype :class:`MetadataField`
+        """
+        self.label = label
+        self.value = value
+
+    def get_label(self):
+        return getattr(self, "_label", None)
+
+    def set_label(self, x):
+        setattr(self, "_label", x)     
+
+    def del_label(self):
+        setattr(self, "_label", None) 
+
+    def get_value(self):
+        return getattr(self, "_value", None)
+
+    def set_value(self, x):
+        setattr(self, "_value", x)     
+
+    def del_value(self):
+        setattr(self, "_label", None) 
+
+    def to_dict(self):
+        return {"label": self.label, "value": self.value}
+
+    @classmethod
+    def load(cls, json_data):
+        try:
+            data = json.load(json_data)
+        except JSONDecodeError:
+            raise ValueError("MetadataField.load got invalid JSON data")
+        return cls(data.get("label"), data.get("value"))
+
+
+
+    label = property(get_label, set_label, del_label)
+    value = property(get_value, set_value, del_value)
 
 # JSON-LD @types to Class; used for converting the string value in 
 # @type loading JSON strings into the right object instances
