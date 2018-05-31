@@ -1290,6 +1290,7 @@ class Annotation(Record):
         if getattr(self, "resource", None):
             print("hello from check for resource prop")
             out["resource"] = self.resource.to_dict()
+        out["on"] = self.on
         return out
 
     @classmethod
