@@ -1115,7 +1115,7 @@ class AnnotationList(Record):
     """
     __name__ = "AnnotationList"
 
-    def __init__(self, uri, on=None):
+    def __init__(self, uri):
         """initializes an instance of AnnotationList
 
         :param str url: a valid url meant to identify the AnnotationList
@@ -1124,8 +1124,6 @@ class AnnotationList(Record):
         """
         self.id = uri
         self.type = "sc:AnnotationList"
-        if on:
-            self.on = on
 
     def get_resources(self):
         """returns the value of the resources property
@@ -1168,7 +1166,6 @@ class AnnotationList(Record):
         out["@id"] = self.id
         out["@type"] = self.type
         out["resources"] = []
-        out["on"] = self.on
         if hasattr(self, "resources", None):
             for resource in self.resources:
                 n_item = resource.to_dict()
@@ -1210,7 +1207,7 @@ class Annotation(Record):
     """
     __name__ = "Annotation"
 
-    def __init__(self, uri):
+    def __init__(self, uri, on):
         """initializes an instance of Annotation
 
         :param str url: a valid url meant to identify the Annotation
@@ -1220,6 +1217,7 @@ class Annotation(Record):
         self.id = uri
         self.type = "oa:Annotation"
         self.motivation = "sc:Painting"
+        self.on = on
 
     def get_format(self):
         """returns the value of the resources property
