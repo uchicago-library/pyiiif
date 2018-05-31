@@ -194,7 +194,7 @@ class Tests(unittest.TestCase):
 
     def testBuildAnnotationList(self):
         s = AnnotationList("http://lib.uchicago.edu/")
-        s.canvases = [Annotation("http://lib.uchicago.edu/")]
+        s.canvases = [Annotation("http://lib.uchicago.edu/", "https://example/org/bar")]
         return self.assertEquals(str(s.canvases), "[Annotation for http://lib.uchicago.edu/]") and \
                self.assertEquals(s.id, 'http://lib.uchicago.edu/') 
 
@@ -204,7 +204,7 @@ class Tests(unittest.TestCase):
         canvas.width = 509
         canvas.label = "A Canvas"
         canvas.description = "This a IIIF Canvas created programatically"
-        annotation = Annotation("http://lib.uchicago.edu/annotation")
+        annotation = Annotation("http://lib.uchicago.edu/annotation", "https://example.org/bar")
         an_image = ImageResource('https', 'iiif-server.lib.uchicago.edu', '', 'default-photo.original.jpg', 'image/jpeg')
         an_image = ImageResource('https', 'iiif-server.lib.uchicago.edu', '', 'default-photo.original.jpg', 'image/jpeg')
         annotation.resource = an_image
@@ -222,7 +222,7 @@ class Tests(unittest.TestCase):
         canvas.width = 509
         canvas.label = "A Canvas"
         canvas.description = "This a IIIF Canvas created programatically"
-        annotation = Annotation("http://lib.uchicago.edu/annotation")
+        annotation = Annotation("http://lib.uchicago.edu/annotation", "https://example.org/bar")
         an_image = ImageResource('https', 'iiif-server.lib.uchicago.edu', '', 'default-photo.original.jpg', 'image/jpeg')
         annotation.resource = an_image
         canvas.images = [annotation]
