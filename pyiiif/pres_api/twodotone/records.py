@@ -849,15 +849,12 @@ class Manifest(Record):
 
         :rtype :class:`Manifest`
         """
-        print(type(json_data))
         try:
             data = json.loads(json_data)
         except JSONDecodeError:
             raise ValueError("Sequence.load() was passed invalid JSON data")
         new_manifest = cls(data.get("@id"))
-        print("hi")
         if data.get("metadata"):
-            print("hi from check for metadata")
             mdata_list = []
             for a_field in data.get("metadata"):
                 new_field = MetadataField(a_field.get("label"), a_field.get("value"))
@@ -1288,7 +1285,6 @@ class Annotation(Record):
         out["@type"] = self.type
         out["motivation"] = self.motivation
         if getattr(self, "resource", None):
-            print("hello from check for resource prop")
             out["resource"] = self.resource.to_dict()
         out["on"] = self.on
         return out
