@@ -1093,7 +1093,7 @@ class Canvas(Record):
         new_canvas.width = data.get("width")
         if data.get("images"):
             for n in data.get("images"):
-                an_annotation = Annotation.load(json.dumps(n))
+                an_annotation = Annotation.load(json.dumps(n), on=data.get("@id"))
                 img_list.append(an_annotation)
             new_canvas.images = img_list
         if data.get("otherContent"):
@@ -1115,7 +1115,7 @@ class AnnotationList(Record):
     """
     __name__ = "AnnotationList"
 
-    def __init__(self, uri):
+    def __init__(self, uri, on=None):
         """initializes an instance of AnnotationList
 
         :param str url: a valid url meant to identify the AnnotationList
@@ -1124,6 +1124,8 @@ class AnnotationList(Record):
         """
         self.id = uri
         self.type = "sc:AnnotationList"
+        if on:
+            self.on = on
 
     def get_resources(self):
         """returns the value of the resources property
@@ -1145,6 +1147,16 @@ class AnnotationList(Record):
         """
         self._delete_a_property("_resources")
 
+    def get_on(self):
+        return self._get_simple_property("_on")
+
+    def set_on(self, x):
+       self._set_simple_property(x, '_on')
+
+    def del_on(self):
+        self._delete_a_property("_on")
+
+
     def to_dict(self):
         """converts an instance to a dictionary
 
@@ -1156,6 +1168,7 @@ class AnnotationList(Record):
         out["@id"] = self.id
         out["@type"] = self.type
         out["resources"] = []
+        out["on"] = self.on
         if hasattr(self, "resources", None):
             for resource in self.resources:
                 n_item = resource.to_dict()
@@ -1189,6 +1202,7 @@ class AnnotationList(Record):
         return new_annotation_list
 
     resources = property(get_resources, set_resources, del_resources)
+    on = property(get_on, set_on, del_on)
 
 class Annotation(Record):
     """a class for building IIIF Annotation records
@@ -1281,12 +1295,14 @@ class Annotation(Record):
         return out
 
     @classmethod
-    def load(cls, json_data):
+    def load(cls, json_data, on=None):
         try:
             data = json.loads(json_data)
         except JSONDecodeError:
             raise ValueError("bad JSON passed to Annotation.load()")
         new_annotation = cls(data.get("@id"))
+        if on:
+            new_annotation.on = on
         if data.get("description"):
             new_annotation.description = data.get("description")
         if data.get("label"):
