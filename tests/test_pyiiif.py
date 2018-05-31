@@ -90,6 +90,25 @@ class Tests(unittest.TestCase):
         metadata = x.metadata
         return self.assertEquals(metadata[0].label.lower(), 'a test label')
 
+    def testLoadFromStringAndGetBackSameInToDict(self):
+        input_dict = {"@type": "sc:Manifest", "label": "Test", 
+                      "description": "A test", 
+                      "@id": "https://www.lib.uchicago.edu/", 
+                      "metadata": [
+                          {"label": "A Test Label", "value": "A test value"}
+                      ],
+                      "viewingHint": "individuals",
+                      "viewingDirection": "left-to-right",
+                      "@context": "https://iiif.io/api/presentation/2/context.json"}
+        x = Manifest.load(json.dumps(input_dict))
+        converted = x.to_dict()
+        metadata = x.metadata
+        print(converted.get("metadata"))
+        return self.assertNotEquals(converted.get("metadata"), None) and \
+               self.assertEquals(converted.get("metadata")[0]["label"].lower(), "a test label") and \
+               self.assertEquals(converted.get("viewingHint") , "individuals") and \
+               self.assertEquals(converted.get("@context"), "https://iiif.io/api/presentation/2/context.json")
+
     def testValidateGoodRecordReturnsTrue(self):
         x = Record()
         x.id = "http://www2.lib.uchicago.edu/"

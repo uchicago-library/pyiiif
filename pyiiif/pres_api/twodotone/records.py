@@ -427,7 +427,10 @@ class Record:
             else:
                 value = getattr(self, n_property, None)
                 if isinstance(value, list):
-                    out[n_property[1:]] = [x.to_dict() for x in getattr(self, n_property, None)]
+                    if n_property == 'metadata':
+                        out[n_property] = [x.to_dict() for x in getattr(self, n_property, None)]
+                    else:
+                        out[n_property[1:]] = [x.to_dict() for x in getattr(self, n_property, None)]
                 if isinstance(value, str) or isinstance(value, int):
                     out[n_property[1:]] = getattr(self, n_property, None)
         return out
