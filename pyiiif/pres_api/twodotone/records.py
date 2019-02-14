@@ -50,21 +50,7 @@ class Record:
         :rtype str
         :returns a dictionary converted to a string with all properties names of the instance converted to IIIF keys
         """
-        out = {}
-        out["@id"] = self.id
-        if hasattr(self, "type"):
-            out["@type"] = self.type
-        if hasattr(self, 'context'):
-            out["@context"] = self.context
-        if hasattr(self, 'viewingHint'):
-            out["viewingHint"] = self.viewingHint
-        if hasattr(self, 'viewingDirection'):
-            out["viewingDirection"] = self.viewingDirection
-        if hasattr(self, 'label'):
-            out["label"] = self.label
-        if hasattr(self, 'description'):
-            out["description"] = self.description
-        return json.dumps(out)
+        return json.dumps(self.to_dict())
 
     def _iterate_some_list(self, attribute_name):
         """a method to return a list of objects in an instance's property
