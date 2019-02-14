@@ -88,25 +88,15 @@ class Record:
          class instances a list and in the eventuality that contained items can only be one class 
          instance a single class name
         """
-        if isinstance(x, list):
-            tally = 0
-            for n_col in x:
-                if isinstance(list_item_class, list):
-                    passed = []
-                    for n_potential_type in list_item_class:
-                        if isinstance(n_col, n_potential_type):
-                            passed.append(True)
-                        else:
-                            passed.append(False)
-                    if True not in passed:
-                        raise ValueError("item {} in inputted list is not a valid type for that list.".format(str(tally)))
-                else:
-                    if not isinstance(n_col, list_item_class):
-                        raise ValueError("item {} in inputted list is not an instance of {}".format(str(tally), list_item_class))
-                tally += 1
-            setattr(self, property_name, x)
-        else:
-            raise ValueError("parameter passed to {} must be a list".format(property_name))
+        assert isinstance(x, list)
+        for tally, n_col in enumerate(x):
+            if isinstance(list_item_class, list):
+                if not any([isinstance(n_col, i) for i in list_item_class]):
+                    raise ValueError("item {} in inputted list is not a valid type for that list.".format(str(tally)))
+            else:
+                if not isinstance(n_col, list_item_class):
+                    raise ValueError("item {} in inputted list is not an instance of {}".format(str(tally), list_item_class))
+        setattr(self, property_name, x)
 
     def _get_simple_property(self, property_name):
         """a method to set a simple property value on an instance
