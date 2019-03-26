@@ -19,7 +19,7 @@ r.description = "This is my first IIIF manifest. Please be polite with your crit
 str(r)
 ```
 
-You have a properly formatted IIIF Manifest record with the correct @context, @type and @id attributes as well as a a label and a description. The sequence list will be empty for now. From here, you just need to write the string into  a dictionary
+You have a properly formatted IIIF Manifest record with the correct @context, @type and @id attributes as well as a label and a description. The sequence list will be empty for now. From here, you just need to write the string into  a dictionary
 
 And, for a more complicated example...
 
