@@ -24,6 +24,7 @@ You have a properly formatted IIIF Manifest record with the correct @context, @t
 And, for a more complicated example...
 
 ```python
+import urllib.parse
 from pyiiif.pres_api.twodotone.records import Manifest, Canvas, ImageResource, Annotation, Sequence
 
 # start with a manifest object and remmeber like with every object 
@@ -46,8 +47,13 @@ canvas.label = "A Canvas"
 annotate = Annotation("http://example.org/annotation/1", canvas_id)
 
 # now to make an image resource to put in the canvas
-# ImageResource has more paramters than this...
-img = ImageResource("http://example.org/an_image.jpg")
+img = ImageResource(
+  "http",
+  "example.org",
+  "",
+  urllib.parse.quote("/an_image.jpg", safe=""),
+  "image/jpeg"
+)
 
 #  last but not least you have to put all the pieces together...
 annotate.resource = img
