@@ -38,11 +38,12 @@ manifest.description = "This is my first IIIF manifest. Please be polite with yo
 sequence = Sequence("http://example.org/sequence/1")
 
 # and now to make a simple canvas
-canvas = Canvas("http://example.org/canvas/1")
+canvas_id = "http://example.org/canvas/1"
+canvas = Canvas(canvas_id)
 canvas.label = "A Canvas"
 
 # now to make an annotation for that canvas
-annotate = Annotation("http://example.org/annotation/1")
+annotate = Annotation("http://example.org/annotation/1", canvas_id)
 
 # now to make an image resource to put in the canvas
 img = ImageResource("http://example.org/an_image.jpg")
