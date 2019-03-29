@@ -46,6 +46,7 @@ canvas.label = "A Canvas"
 annotate = Annotation("http://example.org/annotation/1", canvas_id)
 
 # now to make an image resource to put in the canvas
+# ImageResource has more paramters than this...
 img = ImageResource("http://example.org/an_image.jpg")
 
 #  last but not least you have to put all the pieces together...
