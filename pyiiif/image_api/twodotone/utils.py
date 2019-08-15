@@ -66,7 +66,6 @@ def parse_image_api_url_identifier_url_component(url):
         return s
     else:
         p = urllib.parse.urlparse(url).path
-        print(p)
         s = p.split("/")[-5]
         return s
 
