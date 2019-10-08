@@ -18,7 +18,7 @@ setup(
         ]
     ),
     include_package_data=True,
-    url='https://github.com/bnbalsamo/pyiiif',
+    url='https://github.com/uchicago-library/pyiiif',
     install_requires=[
         'requests'
     ],

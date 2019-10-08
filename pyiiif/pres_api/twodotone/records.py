@@ -4,7 +4,6 @@
 from os.path import join
 import json
 import requests
-from json.decoder import JSONDecodeError
 from urllib.parse import urlparse, ParseResult
 
 from pyiiif.utils import escape_identifier, convert_context_url_into_lookup
@@ -551,6 +550,33 @@ class ImageResource(Record):
         """
         self._delete_a_property("_format")
 
+    def get_height(self):
+        """gets the height property of the instance
+
+        The height is the mimetype of the source of the image being requested from a IIIF Image API
+
+        :rtype str
+        :returns a string representing the mimetype of the source of the image being defined
+        """
+        return self._get_numeric_property("_height")
+
+    def set_height(self, x):
+        """sets the height property of the instance
+
+        See http://www.ietf.org/rfc/rfc2045.txt and http://www.ietf.org/rfc/rfc2046.txt 
+        for more inheightion about mimetypes
+       
+        TODO: write proper mimetype validation if this is not too hairy of a problem to solve!
+
+        :param str x: the mimetype of source image conforming to RFC 2045 and RFC 2046
+        """
+        self._set_numeric_property(x, "_height")
+
+    def del_height(self):
+        """sets the height property to null
+        """
+        self._delete_a_property("_height")
+
     def get_service(self):
         """returns the service property of the instance
 
@@ -568,6 +594,33 @@ class ImageResource(Record):
         """
         self._delete_a_property("_service")
 
+    def get_width(self):
+        """gets the width property of the instance
+
+        The width is the mimetype of the source of the image being requested from a IIIF Image API
+
+        :rtype str
+        :returns a string representing the mimetype of the source of the image being defined
+        """
+        return self._get_numeric_property("_width")
+
+    def set_width(self, x):
+        """sets the width property of the instance
+
+        See http://www.ietf.org/rfc/rfc2045.txt and http://www.ietf.org/rfc/rfc2046.txt 
+        for more inwidthion about mimetypes
+       
+        TODO: write proper mimetype validation if this is not too hairy of a problem to solve!
+
+        :param str x: the mimetype of source image conforming to RFC 2045 and RFC 2046
+        """
+        self._set_numeric_property(x, "_width")
+
+    def del_width(self):
+        """sets the width property to null
+        """
+        self._delete_a_property("_width")
+
     def to_dict(self):
         """converts an instance to a dictionary
 
@@ -579,7 +632,9 @@ class ImageResource(Record):
         out["@id"] = self.id
         out["@type"] = self.type
         out["format"] = self.format
+        out["height"] = self._height
         out["service"] =  self.service.to_dict()
+        out["width"] =  self._width
         return out
 
     @classmethod
@@ -592,7 +647,7 @@ class ImageResource(Record):
         """
         try:
             data = json.loads(json_data)
-        except JSONDecodeError:
+        except json.decoder.JSONDecodeError:
             raise ValueError("invalid JSON was passed to ImageResource.load()")
         identifier = data.get("@id")
         image_url = ImageApiUrl.from_image_url(identifier)
@@ -697,7 +752,7 @@ class Collection(Record):
         """
         try:
             data = json.dumps(json_data)
-        except JSONDecodeError:
+        except json.decoder.JSONDecodeError:
             raise ValueError("Sequence.load() was passed invalid JSON data")
         new_collection = cls(data.get("@id"))
         if data.get("description"):
@@ -827,7 +882,7 @@ class Manifest(Record):
         """
         try:
             data = json.loads(json_data)
-        except JSONDecodeError:
+        except json.decoder.JSONDecodeError:
             raise ValueError("Sequence.load() was passed invalid JSON data")
         new_manifest = cls(data.get("@id"))
         if data.get("metadata"):
@@ -920,7 +975,7 @@ class Sequence(Record):
         """
         try:
             data = json.loads(json_data)
-        except JSONDecodeError:
+        except json.decoder.JSONDecodeError:
             raise ValueError("Sequence.load() was passed invalid JSON data")
         new_sequence = Sequence(data.get("@id"))
         if data.get("description"):
@@ -1055,7 +1110,7 @@ class Canvas(Record):
         """
         try:
             data = json.loads(json_data)
-        except JSONDecodeError:
+        except json.decoder.JSONDecodeError:
             raise ValueError("Canvas.load was passed invalid json data")
         img_list = []
         new_canvas = cls(data.get("@id"))
@@ -1152,7 +1207,7 @@ class AnnotationList(Record):
     def load(cls, json_data):
         try:
             data = json.loads(json_data)
-        except JSONDecodeError:
+        except json.decoder.JSONDecodeError:
             raise ValueError("bad JSON passed to AnnotationList.load()")
         new_annotation_list = cls(data.get("@id"))
         if data.get("description"):
@@ -1269,7 +1324,7 @@ class Annotation(Record):
     def load(cls, json_data, on=None):
         try:
             data = json.loads(json_data)
-        except JSONDecodeError:
+        except json.decoder.JSONDecodeError:
             raise ValueError("bad JSON passed to Annotation.load()")
         new_annotation = cls(data.get("@id"))
         if on:
@@ -1391,7 +1446,7 @@ class Range(Record):
     def load(cls, json_data):
         try:
             data = json.dumps(json_data)
-        except JSONDecodeError:
+        except json.decoder.JSONDecodeError:
             raise ValueError("bad JSON passed to Range.load()")
         new_range = cls(data.get("@id"))
         if data.get("description"):
@@ -1482,7 +1537,7 @@ class OtherContent(object):
     def load(cls, json_data):
         try:
             data = json.load(json_data)
-        except JSONDecodeError:
+        except json.decoder.JSONDecodeError:
             raise ValueError("OtherContent.load got invalid JSON data")
         return cls(data)
 
@@ -1529,7 +1584,7 @@ class MetadataField:
     def load(cls, json_data):
         try:
             data = json.load(json_data)
-        except JSONDecodeError:
+        except json.decoder.JSONDecodeError:
             raise ValueError("MetadataField.load got invalid JSON data")
         return cls(data.get("label"), data.get("value"))
 
