@@ -206,7 +206,8 @@ class Tests(unittest.TestCase):
         canvas.description = "This a IIIF Canvas created programatically"
         annotation = Annotation("http://lib.uchicago.edu/annotation", "https://example.org/bar")
         an_image = ImageResource('https', 'iiif-server.lib.uchicago.edu', '', 'default-photo.original.jpg', 'image/jpeg')
-        an_image = ImageResource('https', 'iiif-server.lib.uchicago.edu', '', 'default-photo.original.jpg', 'image/jpeg')
+        an_image.set_width(1)
+        an_image.set_height(1)
         annotation.resource = an_image
         canvas.images = [annotation]
         return self.assertEqual(canvas.to_dict()["images"][0]["resource"]["@id"], "https://iiif-server.lib.uchicago.edu/default-photo.original.jpg/full/full/0/default.jpg") and \
@@ -224,6 +225,8 @@ class Tests(unittest.TestCase):
         canvas.description = "This a IIIF Canvas created programatically"
         annotation = Annotation("http://lib.uchicago.edu/annotation", "https://example.org/bar")
         an_image = ImageResource('https', 'iiif-server.lib.uchicago.edu', '', 'default-photo.original.jpg', 'image/jpeg')
+        an_image.set_width(1)
+        an_image.set_height(1)
         annotation.resource = an_image
         canvas.images = [annotation]
         sequence.canvases = [canvas]
