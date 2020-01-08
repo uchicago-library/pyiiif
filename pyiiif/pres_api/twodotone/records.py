@@ -521,7 +521,7 @@ class ImageResource(Record):
         self.id = url.to_image_url() 
         self.type = "dctypes:Image"
         self.format = mimetype
-        self.service = Service(url.to_info_url())
+        self.service = Service(url.to_base_url())
 
     def get_format(self):
         """gets the format property of the instance

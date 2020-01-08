@@ -142,6 +142,16 @@ class ImageApiUrl:
         return self.scheme+"://" + self.server + self.prefix + "/" + \
             self.identifier + "/info.json"
 
+    def to_base_url(self):
+        """
+        Return a representation of the base url represented
+        by the :class:`ImageApiUrl`
+
+        :rtype: str
+        """
+        return self.scheme+"://" + self.server + self.prefix + "/" + \
+            self.identifier
+
     def validate(self):
         """
         Validates the URL.
